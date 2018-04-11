@@ -52,10 +52,10 @@ func (o {{$modelName}}) {{titleCase $column.Name}}() int32 {
 }
 {{- else if eq $column.Type "int64" }}
 // {{titleCase $column.Name}} is the {{$modelName}} {{$column.Name}}
-func (o {{$modelName}}) {{titleCase $column.Name}}() int32 {
-  return int32(o.model.{{titleCase $column.Name}}) // {{$column.Type}}
+func (o {{$modelName}}) {{titleCase $column.Name}}() Int64 {
+  return Int64(fmt.Sprintf("%d", o.model.{{titleCase $column.Name}})) // {{$column.Type}}
 }
-{{- else if eq $column.Type "null.Bool" }}
+{{- else if eq $column.Type "null.Bool" }}Int64(fmt.Sprintf("%d", o.model.{{titleCase $column.Name}})) // {{$column.Type}}
 // {{titleCase $column.Name}} is the {{$modelName}} {{$column.Name}}
 func (o {{$modelName}}) {{titleCase $column.Name}}() *bool {
   return o.model.{{titleCase $column.Name}}.Ptr() // {{$column.Type}}
@@ -95,11 +95,11 @@ func (o {{$modelName}}) {{titleCase $column.Name}}() *int32 {
 }
 {{- else if eq $column.Type "null.Int64" }}
 // {{titleCase $column.Name}} is the {{$modelName}} {{$column.Name}}
-func (o {{$modelName}}) {{titleCase $column.Name}}() *int32 {
+func (o {{$modelName}}) {{titleCase $column.Name}}() *Int64 {
   if !o.model.{{titleCase $column.Name}}.Valid {
     return nil
   }
-  x := int32(o.model.{{titleCase $column.Name}}.Int64) // {{$column.Type}}
+  x := Int64(fmt.Sprintf("%d", o.model.{{titleCase $column.Name}}.Int64)) // {{$column.Type}}
   return &x
 }
 {{- else if eq $column.Type "null.JSON" }}

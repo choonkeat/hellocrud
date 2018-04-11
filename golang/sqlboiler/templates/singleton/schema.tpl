@@ -1,11 +1,12 @@
 // Schema is the GraphQL schema
 var Schema = `
+scalar Time
+scalar Int64
 
 schema {
   query: Query
   mutation: Mutation
 }
-scalar Time
 
 type Query {
 {{range $table := .Tables}}
@@ -69,7 +70,7 @@ type {{$modelName}} {
 	{{- else if eq $column.Type "int16" }}
 		{{camelCase $column.Name}}: Int!
 	{{- else if eq $column.Type "int64" }}
-		{{camelCase $column.Name}}: Int!
+		{{camelCase $column.Name}}: Int64!
 	{{- else if eq $column.Type "null.Bool" }}
 		{{camelCase $column.Name}}: Boolean
 	{{- else if eq $column.Type "null.Byte" }}
@@ -83,7 +84,7 @@ type {{$modelName}} {
 	{{- else if eq $column.Type "null.Int16" }}
 		{{camelCase $column.Name}}: Int
 	{{- else if eq $column.Type "null.Int64" }}
-		{{camelCase $column.Name}}: Int
+		{{camelCase $column.Name}}: Int64
 	{{- else if eq $column.Type "null.JSON" }}
 		{{camelCase $column.Name}}: String
 	{{- else if eq $column.Type "null.String" }}
@@ -126,7 +127,7 @@ input Create{{$modelName}}Input {
 	{{- else if eq $column.Type "int16" }}
 	  {{camelCase $column.Name}}: Int!
 	{{- else if eq $column.Type "int64" }}
-	  {{camelCase $column.Name}}: Int!
+	  {{camelCase $column.Name}}: Int64!
 	{{- else if eq $column.Type "null.Bool" }}
 	  {{camelCase $column.Name}}: Boolean
 	{{- else if eq $column.Type "null.Byte" }}
@@ -140,7 +141,7 @@ input Create{{$modelName}}Input {
 	{{- else if eq $column.Type "null.Int16" }}
 	  {{camelCase $column.Name}}: Int
 	{{- else if eq $column.Type "null.Int64" }}
-	  {{camelCase $column.Name}}: Int
+	  {{camelCase $column.Name}}: Int64
 	{{- else if eq $column.Type "null.JSON" }}
 	  {{camelCase $column.Name}}: String
 	{{- else if eq $column.Type "null.String" }}
@@ -179,7 +180,7 @@ input Update{{$modelName}}Input {
 	{{- else if eq $column.Type "int16" }}
 	  {{camelCase $column.Name}}: Int!
 	{{- else if eq $column.Type "int64" }}
-	  {{camelCase $column.Name}}: Int!
+	  {{camelCase $column.Name}}: Int64!
 	{{- else if eq $column.Type "null.Bool" }}
 	  {{camelCase $column.Name}}: Boolean
 	{{- else if eq $column.Type "null.Byte" }}
@@ -193,7 +194,7 @@ input Update{{$modelName}}Input {
 	{{- else if eq $column.Type "null.Int16" }}
 	  {{camelCase $column.Name}}: Int
 	{{- else if eq $column.Type "null.Int64" }}
-	  {{camelCase $column.Name}}: Int
+	  {{camelCase $column.Name}}: Int64
 	{{- else if eq $column.Type "null.JSON" }}
 	  {{camelCase $column.Name}}: String
 	{{- else if eq $column.Type "null.String" }}
