@@ -1,7 +1,9 @@
+// Resolver is the root GraphQL resolver
 type Resolver struct {
 	db boil.Executor
 }
 
+// NewResolver returns a new root GraphQL resolver
 func NewResolver(databaseURL string) (*Resolver, error) {
 	url, err := url.Parse(databaseURL)
 	if err != nil {

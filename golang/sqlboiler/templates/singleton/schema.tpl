@@ -1,3 +1,4 @@
+// Schema is the GraphQL schema
 var Schema = `
 
 schema {
@@ -55,10 +56,6 @@ type {{$modelName}} {
 		# Convenient guid for react component @key attribute
 		rowId: String!
 		{{camelCase $column.Name}}: ID!
-	{{- else if eq $column.Name "created_at" }}
-		{{camelCase $column.Name}}: Time
-	{{- else if eq $column.Type "updated_at" }}
-		{{camelCase $column.Name}}: Time
 	{{- else if eq $column.Type "[]byte" }}
 		{{camelCase $column.Name}}: String!
 	{{- else if eq $column.Type "bool" }}
@@ -96,7 +93,7 @@ type {{$modelName}} {
 	{{- else if eq $column.Type "string" }}
 		{{camelCase $column.Name}}: String!
 	{{- else if eq $column.Type "time.Time" }}
-		{{camelCase $column.Name}}: Time
+		{{camelCase $column.Name}}: Time!
 	{{- else if eq $column.Type "types.Byte" }}
 		{{camelCase $column.Name}}: String!
 	{{- else if eq $column.Type "types.JSON" }}
@@ -112,8 +109,6 @@ type {{$modelName}}sCollection {
 input Create{{$modelName}}Input {
 	{{range $column := $table.Columns }}
 	{{- if eq $column.Name "id" }}
-	{{- else if eq $column.Name "created_at" }}
-	{{- else if eq $column.Type "updated_at" }}
 	{{- else if eq $column.Type "[]byte" }}
 	  {{camelCase $column.Name}}: String!
 	{{- else if eq $column.Type "bool" }}
@@ -151,7 +146,7 @@ input Create{{$modelName}}Input {
 	{{- else if eq $column.Type "string" }}
 	  {{camelCase $column.Name}}: String!
 	{{- else if eq $column.Type "time.Time" }}
-	  {{camelCase $column.Name}}: Time
+	  {{camelCase $column.Name}}: Time!
 	{{- else if eq $column.Type "types.Byte" }}
 	  {{camelCase $column.Name}}: String!
 	{{- else if eq $column.Type "types.JSON" }}
@@ -163,8 +158,6 @@ input Create{{$modelName}}Input {
 input Update{{$modelName}}Input {
 	{{range $column := $table.Columns }}
 	{{- if eq $column.Name "id" }}
-	{{- else if eq $column.Name "created_at" }}
-	{{- else if eq $column.Type "updated_at" }}
 	{{- else if eq $column.Type "[]byte" }}
 	  {{camelCase $column.Name}}: String!
 	{{- else if eq $column.Type "bool" }}
@@ -202,7 +195,7 @@ input Update{{$modelName}}Input {
 	{{- else if eq $column.Type "string" }}
 	  {{camelCase $column.Name}}: String!
 	{{- else if eq $column.Type "time.Time" }}
-	  {{camelCase $column.Name}}: Time
+	  {{camelCase $column.Name}}: Time!
 	{{- else if eq $column.Type "types.Byte" }}
 	  {{camelCase $column.Name}}: String!
 	{{- else if eq $column.Type "types.JSON" }}

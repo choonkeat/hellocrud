@@ -2,15 +2,18 @@
 {{- $modelName := $tableNameSingular | titleCase -}}
 {{- $modelNameCamel := $tableNameSingular | camelCase}}
 
+// {{$modelName}}sCollection is the struct representing a collection of GraphQL types
 type {{$modelName}}sCollection struct {
 	nodes []{{$modelName}}
 	// future meta data goes here, e.g. count
 }
 
+// Nodes returns the list of GraphQL types
 func (c {{$modelName}}sCollection) Nodes(ctx context.Context) []{{$modelName}} {
 	return c.nodes
 }
 
+// All{{$modelName}}s retrieves all {{$modelName}}
 func (r *Resolver) All{{$modelName}}s(ctx context.Context, args struct {
 	Since    *graphql.ID
 	PageSize int32
@@ -36,6 +39,7 @@ func (r *Resolver) All{{$modelName}}s(ctx context.Context, args struct {
 	return result, nil
 }
 
+// {{$modelName}}ByID retrieves {{$modelName}} by ID
 func (r *Resolver) {{$modelName}}ByID(ctx context.Context, args struct {
 	ID graphql.ID
 }) ({{$modelName}}, error) {
@@ -45,7 +49,19 @@ func (r *Resolver) {{$modelName}}ByID(ctx context.Context, args struct {
 		return result, errors.Wrapf(err, "{{$modelName}}ByID(%#v)", args)
 	}
 
-	m, err := dbmodel.Find{{$modelName}}(r.db, int(i))
+	{{- range $column := .Table.Columns -}}
+	{{- if eq $column.Name "id" -}}
+	{{- if eq $column.Type "int"}}
+	id := int(i) {}
+	{{- else if eq $column.Type "int16"}}
+	id := int16(i)
+	{{- else if eq $column.Type "int64"}}
+	id := int64(i)
+	{{- end -}}
+	{{- end -}}
+	{{- end}}
+
+	m, err := dbmodel.Find{{$modelName}}(r.db, id)
 	if err != nil {
 		return result, errors.Wrapf(err, "{{$modelName}}ByID(%#v)", args)
 	} else if m == nil {
@@ -54,6 +70,7 @@ func (r *Resolver) {{$modelName}}ByID(ctx context.Context, args struct {
 	return {{$modelName}}{model: *m, db: r.db}, nil
 }
 
+// Create{{$modelName}} creates a {{$modelName}} based on the provided input
 func (r *Resolver) Create{{$modelName}}(ctx context.Context, args struct {
 	Input create{{$modelName}}Input
 }) ({{$modelName}}, error) {
@@ -75,6 +92,7 @@ func (r *Resolver) Create{{$modelName}}(ctx context.Context, args struct {
 	return {{$modelName}}{model: m, db: r.db}, nil
 }
 
+// Update{{$modelName}}ByID updates a {{$modelName}} based on the provided ID and input
 func (r *Resolver) Update{{$modelName}}ByID(ctx context.Context, args struct {
 	ID    graphql.ID
 	Input update{{$modelName}}Input
@@ -84,8 +102,19 @@ func (r *Resolver) Update{{$modelName}}ByID(ctx context.Context, args struct {
 	if err != nil {
 		return result, errors.Wrapf(err, "{{$modelName}}ByID(%#v)", args)
 	}
+	{{- range $column := .Table.Columns -}}
+	{{- if eq $column.Name "id" -}}
+	{{- if eq $column.Type "int"}}
+	id := int(i) {}
+	{{- else if eq $column.Type "int16"}}
+	id := int16(i)
+	{{- else if eq $column.Type "int64"}}
+	id := int64(i)
+	{{- end -}}
+	{{- end -}}
+	{{- end}}
 
-	m, err := dbmodel.Find{{$modelName}}(r.db, int(i))
+	m, err := dbmodel.Find{{$modelName}}(r.db, id)
 	if err != nil {
 		return result, errors.Wrapf(err, "update{{$modelName}}ByID(%#v)", args)
 	} else if m == nil {
@@ -105,6 +134,7 @@ func (r *Resolver) Update{{$modelName}}ByID(ctx context.Context, args struct {
 	return {{$modelName}}{model: *m, db: r.db}, nil
 }
 
+// Delete{{$modelName}}ByID deletes a {{$modelName}} based on the provided ID
 func (r *Resolver) Delete{{$modelName}}ByID(ctx context.Context, args struct {
 	ID graphql.ID
 }) ({{$modelName}}, error) {
@@ -113,8 +143,19 @@ func (r *Resolver) Delete{{$modelName}}ByID(ctx context.Context, args struct {
 	if err != nil {
 		return result, errors.Wrapf(err, "{{$modelName}}ByID(%#v)", args)
 	}
+	{{- range $column := .Table.Columns -}}
+	{{- if eq $column.Name "id" -}}
+	{{- if eq $column.Type "int"}}
+	id := int(i) {}
+	{{- else if eq $column.Type "int16"}}
+	id := int16(i)
+	{{- else if eq $column.Type "int64"}}
+	id := int64(i)
+	{{- end -}}
+	{{- end -}}
+	{{- end}}
 
-	m, err := dbmodel.Find{{$modelName}}(r.db, int(i))
+	m, err := dbmodel.Find{{$modelName}}(r.db, id)
 	if err != nil {
 		return result, errors.Wrapf(err, "update{{$modelName}}ByID(%#v)", args)
 	} else if m == nil {

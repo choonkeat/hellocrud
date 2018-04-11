@@ -2,12 +2,10 @@
 {{- $modelName := $tableNameSingular | titleCase -}}
 {{- $modelNameCamel := $tableNameSingular | camelCase -}}
 
-// {{$modelName}} is an object to back GraphQL type
+// create{{$modelName}}Input is an object to back {{$modelName}} mutation (create) input type
 type create{{$modelName}}Input struct {
 {{range $column := .Table.Columns }}
 {{- if eq $column.Name "id" }}
-{{- else if eq $column.Name "created_at" }}
-{{- else if eq $column.Type "updated_at" }}
 {{- else if eq $column.Type "[]byte" }}
   {{titleCase $column.Name}} []byte
 {{- else if eq $column.Type "bool" }}
