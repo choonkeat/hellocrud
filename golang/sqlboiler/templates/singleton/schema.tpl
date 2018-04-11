@@ -109,6 +109,10 @@ type {{$modelName}}sCollection {
 input Create{{$modelName}}Input {
 	{{range $column := $table.Columns }}
 	{{- if eq $column.Name "id" }}
+	{{- else if eq $column.Name "created_by" }}
+	{{- else if eq $column.Name "created_at" }}
+	{{- else if eq $column.Name "updated_by" }}
+	{{- else if eq $column.Name "updated_at" }}
 	{{- else if eq $column.Type "[]byte" }}
 	  {{camelCase $column.Name}}: String!
 	{{- else if eq $column.Type "bool" }}
@@ -158,6 +162,10 @@ input Create{{$modelName}}Input {
 input Update{{$modelName}}Input {
 	{{range $column := $table.Columns }}
 	{{- if eq $column.Name "id" }}
+	{{- else if eq $column.Name "created_by" }}
+	{{- else if eq $column.Name "created_at" }}
+	{{- else if eq $column.Name "updated_by" }}
+	{{- else if eq $column.Name "updated_at" }}
 	{{- else if eq $column.Type "[]byte" }}
 	  {{camelCase $column.Name}}: String!
 	{{- else if eq $column.Type "bool" }}

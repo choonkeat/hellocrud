@@ -6,6 +6,10 @@
 type create{{$modelName}}Input struct {
 {{range $column := .Table.Columns }}
 {{- if eq $column.Name "id" }}
+{{- else if eq $column.Name "created_by" }}
+{{- else if eq $column.Name "created_at" }}
+{{- else if eq $column.Name "updated_by" }}
+{{- else if eq $column.Name "updated_at" }}
 {{- else if eq $column.Type "[]byte" }}
   {{titleCase $column.Name}} []byte
 {{- else if eq $column.Type "bool" }}
