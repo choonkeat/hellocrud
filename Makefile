@@ -2,16 +2,24 @@ DBTYPE=postgres
 DEBUG=1
 DATABASE_URL=postgres://postgres:postgres@127.0.0.1/hellocrud_development
 
-all:
+run:
 	make graphql web -j 2
 
 graphql: generate
-	env DEBUG=$(DEBUG) DATABASE_URL=$(DATABASE_URL)?sslmode=disable go run golang/cmd/server/main.go
+	env DEBUG=$(DEBUG) DATABASE_URL=$(DATABASE_URL)?sslmode=disable go run golang/example/main.go
 
-web:
+web: js/node_modules
 	cd js; yarn start
 
+js/node_modules:
+	cd js; yarn
+
+setupdb:
+	psql $(DATABASE_URL) < golang/example/schema.sql
+
 generate:
-	sqlboiler --output golang/dbmodel --pkgname dbmodel --schema app $(DBTYPE)
-	sqlboiler --basedir golang/sqlboiler --output golang/graph --pkgname graph --schema app $(DBTYPE)
-	goimports -w golang/graph/*.go golang/dbmodel/*.go
+	# for db
+	sqlboiler --output golang/example/dbmodel --pkgname dbmodel --schema app $(DBTYPE)
+	# for graphql
+	sqlboiler --output golang/example/graph   --pkgname graph   --schema app --basedir golang/sqlboiler $(DBTYPE)
+	goimports -w golang/example/*.go golang/example/graph/*.go golang/example/dbmodel/*.go

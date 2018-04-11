@@ -1,7 +1,7 @@
 import React from 'react'
 import './App.css'
 import Crud from './crud'
-import Thing from './thing'
+import Thing from './thing' // placeholder
 import { Switch, Route } from 'react-router'
 import { ApolloProvider } from 'react-apollo'
 import { ApolloClient } from 'apollo-client'

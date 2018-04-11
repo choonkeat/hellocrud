@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/develsadvocates/hellocrud/golang/graph"
+	"github.com/choonkeat/hellocrud/golang/example/graph"
 	graphql "github.com/graph-gophers/graphql-go"
 	"github.com/graph-gophers/graphql-go/relay"
 
