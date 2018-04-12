@@ -1,11 +1,12 @@
 {{- $tableNameSingular := .Table.Name | singular -}}
 {{- $modelName := $tableNameSingular | titleCase -}}
 {{- $modelNameCamel := $tableNameSingular | camelCase -}}
+{{- $pkColNames := .Table.PKey.Columns -}}
 
 // create{{$modelName}}Input is an object to back {{$modelName}} mutation (create) input type
 type create{{$modelName}}Input struct {
 {{range $column := .Table.Columns }}
-{{- if eq $column.Name "id" }}
+{{- if containsAny $pkColNames $column.Name }}
 {{- else if eq $column.Name "created_by" }}
 {{- else if eq $column.Name "created_at" }}
 {{- else if eq $column.Name "updated_by" }}

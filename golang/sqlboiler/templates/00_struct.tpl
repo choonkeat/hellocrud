@@ -1,6 +1,7 @@
 {{- $tableNameSingular := .Table.Name | singular -}}
 {{- $modelName := $tableNameSingular | titleCase -}}
 {{- $modelNameCamel := $tableNameSingular | camelCase -}}
+{{- $pkColNames := .Table.PKey.Columns -}}
 
 // {{$modelName}} is an object to back GraphQL type
 type {{$modelName}} struct {
@@ -10,9 +11,9 @@ type {{$modelName}} struct {
 
 // GraphQL friendly getters
 {{range $column := .Table.Columns }}
-{{- if eq $column.Name "id" }}
-// Row{{titleCase $column.Name}} is the {{$modelName}} GUID
-func (o {{$modelName}}) Row{{titleCase $column.Name}}() string {
+{{- if containsAny $pkColNames $column.Name }}
+// RowID is the {{$modelName}} GUID
+func (o {{$modelName}}) RowID() string {
   return fmt.Sprintf("{{$modelName}}%d", o.model.{{titleCase $column.Name}}) // {{$column.Type}}
 }
 

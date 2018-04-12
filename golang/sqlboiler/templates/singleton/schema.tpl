@@ -50,11 +50,12 @@ type Mutation {
 {{- $tableNameSingular := .Name | singular -}}
 {{- $modelName := $tableNameSingular | titleCase -}}
 {{- $modelNameCamel := $tableNameSingular | camelCase -}}
+{{- $pkColNames := $table.PKey.Columns -}}
 
 type {{$modelName}} {
 	{{range $column := $table.Columns }}
-	{{- if eq $column.Name "id" }}
-		# Convenient guid for react component @key attribute
+	{{- if containsAny $pkColNames $column.Name }}
+		# Convenient GUID for react component @key attribute
 		rowId: String!
 		{{camelCase $column.Name}}: ID!
 	{{- else if eq $column.Type "[]byte" }}
@@ -109,7 +110,7 @@ type {{$modelName}}sCollection {
 
 input Create{{$modelName}}Input {
 	{{range $column := $table.Columns }}
-	{{- if eq $column.Name "id" }}
+	{{- if containsAny $pkColNames $column.Name }}
 	{{- else if eq $column.Name "created_by" }}
 	{{- else if eq $column.Name "created_at" }}
 	{{- else if eq $column.Name "updated_by" }}
@@ -162,7 +163,7 @@ input Create{{$modelName}}Input {
 
 input Update{{$modelName}}Input {
 	{{range $column := $table.Columns }}
-	{{- if eq $column.Name "id" }}
+	{{- if containsAny $pkColNames $column.Name }}
 	{{- else if eq $column.Name "created_by" }}
 	{{- else if eq $column.Name "created_at" }}
 	{{- else if eq $column.Name "updated_by" }}

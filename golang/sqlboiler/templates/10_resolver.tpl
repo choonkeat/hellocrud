@@ -1,6 +1,7 @@
 {{- $tableNameSingular := .Table.Name | singular -}}
 {{- $modelName := $tableNameSingular | titleCase -}}
 {{- $modelNameCamel := $tableNameSingular | camelCase}}
+{{- $pkColDefs := sqlColDefinitions .Table.Columns .Table.PKey.Columns}}
 
 // {{$modelName}}sCollection is the struct representing a collection of GraphQL types
 type {{$modelName}}sCollection struct {
@@ -49,15 +50,13 @@ func (r *Resolver) {{$modelName}}ByID(ctx context.Context, args struct {
 		return result, errors.Wrapf(err, "{{$modelName}}ByID(%#v)", args)
 	}
 
-	{{- range $column := .Table.Columns -}}
-	{{- if eq $column.Name "id" -}}
+	{{- range $column := $pkColDefs -}}
 	{{- if eq $column.Type "int"}}
-	id := int(i) {}
+	id := int(i)
 	{{- else if eq $column.Type "int16"}}
 	id := int16(i)
 	{{- else if eq $column.Type "int64"}}
 	id := int64(i)
-	{{- end -}}
 	{{- end -}}
 	{{- end}}
 
@@ -102,15 +101,14 @@ func (r *Resolver) Update{{$modelName}}ByID(ctx context.Context, args struct {
 	if err != nil {
 		return result, errors.Wrapf(err, "{{$modelName}}ByID(%#v)", args)
 	}
-	{{- range $column := .Table.Columns -}}
-	{{- if eq $column.Name "id" -}}
+	
+	{{- range $column := $pkColDefs -}}
 	{{- if eq $column.Type "int"}}
-	id := int(i) {}
+	id := int(i)
 	{{- else if eq $column.Type "int16"}}
 	id := int16(i)
 	{{- else if eq $column.Type "int64"}}
 	id := int64(i)
-	{{- end -}}
 	{{- end -}}
 	{{- end}}
 
@@ -143,15 +141,14 @@ func (r *Resolver) Delete{{$modelName}}ByID(ctx context.Context, args struct {
 	if err != nil {
 		return result, errors.Wrapf(err, "{{$modelName}}ByID(%#v)", args)
 	}
-	{{- range $column := .Table.Columns -}}
-	{{- if eq $column.Name "id" -}}
+
+	{{- range $column := $pkColDefs -}}
 	{{- if eq $column.Type "int"}}
-	id := int(i) {}
+	id := int(i)
 	{{- else if eq $column.Type "int16"}}
 	id := int16(i)
 	{{- else if eq $column.Type "int64"}}
 	id := int64(i)
-	{{- end -}}
 	{{- end -}}
 	{{- end}}
 
