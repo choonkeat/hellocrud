@@ -1,10 +1,12 @@
+// Schema is the GraphQL schema
 var Schema = `
+scalar Time
+scalar Int64
 
 schema {
   query: Query
   mutation: Mutation
 }
-scalar Time
 
 type Query {
 {{range $table := .Tables}}
@@ -48,17 +50,14 @@ type Mutation {
 {{- $tableNameSingular := .Name | singular -}}
 {{- $modelName := $tableNameSingular | titleCase -}}
 {{- $modelNameCamel := $tableNameSingular | camelCase -}}
+{{- $pkColNames := $table.PKey.Columns -}}
 
 type {{$modelName}} {
 	{{range $column := $table.Columns }}
-	{{- if eq $column.Name "id" }}
-		# Convenient guid for react component @key attribute
+	{{- if containsAny $pkColNames $column.Name }}
+		# Convenient GUID for react component @key attribute
 		rowId: String!
 		{{camelCase $column.Name}}: ID!
-	{{- else if eq $column.Name "created_at" }}
-		{{camelCase $column.Name}}: Time
-	{{- else if eq $column.Type "updated_at" }}
-		{{camelCase $column.Name}}: Time
 	{{- else if eq $column.Type "[]byte" }}
 		{{camelCase $column.Name}}: String!
 	{{- else if eq $column.Type "bool" }}
@@ -72,7 +71,7 @@ type {{$modelName}} {
 	{{- else if eq $column.Type "int16" }}
 		{{camelCase $column.Name}}: Int!
 	{{- else if eq $column.Type "int64" }}
-		{{camelCase $column.Name}}: Int!
+		{{camelCase $column.Name}}: Int64!
 	{{- else if eq $column.Type "null.Bool" }}
 		{{camelCase $column.Name}}: Boolean
 	{{- else if eq $column.Type "null.Byte" }}
@@ -86,7 +85,7 @@ type {{$modelName}} {
 	{{- else if eq $column.Type "null.Int16" }}
 		{{camelCase $column.Name}}: Int
 	{{- else if eq $column.Type "null.Int64" }}
-		{{camelCase $column.Name}}: Int
+		{{camelCase $column.Name}}: Int64
 	{{- else if eq $column.Type "null.JSON" }}
 		{{camelCase $column.Name}}: String
 	{{- else if eq $column.Type "null.String" }}
@@ -96,7 +95,7 @@ type {{$modelName}} {
 	{{- else if eq $column.Type "string" }}
 		{{camelCase $column.Name}}: String!
 	{{- else if eq $column.Type "time.Time" }}
-		{{camelCase $column.Name}}: Time
+		{{camelCase $column.Name}}: Time!
 	{{- else if eq $column.Type "types.Byte" }}
 		{{camelCase $column.Name}}: String!
 	{{- else if eq $column.Type "types.JSON" }}
@@ -111,9 +110,11 @@ type {{$modelName}}sCollection {
 
 input Create{{$modelName}}Input {
 	{{range $column := $table.Columns }}
-	{{- if eq $column.Name "id" }}
+	{{- if containsAny $pkColNames $column.Name }}
+	{{- else if eq $column.Name "created_by" }}
 	{{- else if eq $column.Name "created_at" }}
-	{{- else if eq $column.Type "updated_at" }}
+	{{- else if eq $column.Name "updated_by" }}
+	{{- else if eq $column.Name "updated_at" }}
 	{{- else if eq $column.Type "[]byte" }}
 	  {{camelCase $column.Name}}: String!
 	{{- else if eq $column.Type "bool" }}
@@ -127,7 +128,7 @@ input Create{{$modelName}}Input {
 	{{- else if eq $column.Type "int16" }}
 	  {{camelCase $column.Name}}: Int!
 	{{- else if eq $column.Type "int64" }}
-	  {{camelCase $column.Name}}: Int!
+	  {{camelCase $column.Name}}: Int64!
 	{{- else if eq $column.Type "null.Bool" }}
 	  {{camelCase $column.Name}}: Boolean
 	{{- else if eq $column.Type "null.Byte" }}
@@ -141,7 +142,7 @@ input Create{{$modelName}}Input {
 	{{- else if eq $column.Type "null.Int16" }}
 	  {{camelCase $column.Name}}: Int
 	{{- else if eq $column.Type "null.Int64" }}
-	  {{camelCase $column.Name}}: Int
+	  {{camelCase $column.Name}}: Int64
 	{{- else if eq $column.Type "null.JSON" }}
 	  {{camelCase $column.Name}}: String
 	{{- else if eq $column.Type "null.String" }}
@@ -151,7 +152,7 @@ input Create{{$modelName}}Input {
 	{{- else if eq $column.Type "string" }}
 	  {{camelCase $column.Name}}: String!
 	{{- else if eq $column.Type "time.Time" }}
-	  {{camelCase $column.Name}}: Time
+	  {{camelCase $column.Name}}: Time!
 	{{- else if eq $column.Type "types.Byte" }}
 	  {{camelCase $column.Name}}: String!
 	{{- else if eq $column.Type "types.JSON" }}
@@ -162,9 +163,11 @@ input Create{{$modelName}}Input {
 
 input Update{{$modelName}}Input {
 	{{range $column := $table.Columns }}
-	{{- if eq $column.Name "id" }}
+	{{- if containsAny $pkColNames $column.Name }}
+	{{- else if eq $column.Name "created_by" }}
 	{{- else if eq $column.Name "created_at" }}
-	{{- else if eq $column.Type "updated_at" }}
+	{{- else if eq $column.Name "updated_by" }}
+	{{- else if eq $column.Name "updated_at" }}
 	{{- else if eq $column.Type "[]byte" }}
 	  {{camelCase $column.Name}}: String!
 	{{- else if eq $column.Type "bool" }}
@@ -178,7 +181,7 @@ input Update{{$modelName}}Input {
 	{{- else if eq $column.Type "int16" }}
 	  {{camelCase $column.Name}}: Int!
 	{{- else if eq $column.Type "int64" }}
-	  {{camelCase $column.Name}}: Int!
+	  {{camelCase $column.Name}}: Int64!
 	{{- else if eq $column.Type "null.Bool" }}
 	  {{camelCase $column.Name}}: Boolean
 	{{- else if eq $column.Type "null.Byte" }}
@@ -192,7 +195,7 @@ input Update{{$modelName}}Input {
 	{{- else if eq $column.Type "null.Int16" }}
 	  {{camelCase $column.Name}}: Int
 	{{- else if eq $column.Type "null.Int64" }}
-	  {{camelCase $column.Name}}: Int
+	  {{camelCase $column.Name}}: Int64
 	{{- else if eq $column.Type "null.JSON" }}
 	  {{camelCase $column.Name}}: String
 	{{- else if eq $column.Type "null.String" }}
@@ -202,7 +205,7 @@ input Update{{$modelName}}Input {
 	{{- else if eq $column.Type "string" }}
 	  {{camelCase $column.Name}}: String!
 	{{- else if eq $column.Type "time.Time" }}
-	  {{camelCase $column.Name}}: Time
+	  {{camelCase $column.Name}}: Time!
 	{{- else if eq $column.Type "types.Byte" }}
 	  {{camelCase $column.Name}}: String!
 	{{- else if eq $column.Type "types.JSON" }}
