@@ -14,10 +14,11 @@ func (c {{$modelName}}sCollection) Nodes(ctx context.Context) []{{$modelName}} {
 	return c.nodes
 }
 
-// All{{$modelName}}s retrieves all {{$modelName}}
+// All{{$modelName}}s retrieves {{$modelName}}s based on the provided search parameters
 func (r *Resolver) All{{$modelName}}s(ctx context.Context, args struct {
 	Since    *graphql.ID
 	PageSize int32
+	Search *search{{$modelName}}Args
 }) ({{$modelName}}sCollection, error) {
 	result := {{$modelName}}sCollection{}
 	mods := []qm.QueryMod{qm.Limit(int(args.PageSize))}
@@ -28,6 +29,9 @@ func (r *Resolver) All{{$modelName}}s(ctx context.Context, args struct {
 			return result, err
 		}
 		mods = append(mods, qm.Offset(int(i)))
+	}
+	if args.Search != nil {
+		mods = append(mods, args.Search.QueryMods()...)
 	}
 	slice, err := dbmodel.{{$modelName}}s(r.db, mods...).All()
 	if err != nil {
