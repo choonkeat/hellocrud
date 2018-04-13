@@ -1,16 +1,9 @@
-# Combining
+# Summary
 
+This repo is a big code generator
 
-### Back-end
-- GraphQL https://graphql.org/
-- Go GraphQL https://github.com/graph-gophers/graphql-go
-- Go ORM https://github.com/volatiletech/sqlboiler
-- Go DB migration https://github.com/mattes/migrate/blob/master/cli/README.md
-
-### Front-end
-- Javascript form https://github.com/final-form/final-form
-- Javascript GraphQL https://www.apollographql.com/docs/react/
-- React https://reactjs.org/
+- Sample GraphQL backend (generated code) https://github.com/choonkeat/hellocrud/tree/master/golang/example/graph ([using custom sqlboiler templates](https://github.com/choonkeat/hellocrud/tree/master/golang/sqlboiler))
+- Sample React CRUD (generated code) https://github.com/choonkeat/hellocrud/blob/master/js/src/thing.js (using the web app at http://localhost:3000 and copy-paste)
 
 # Getting started (Docker)
 
@@ -49,3 +42,16 @@ Start the graphql server and reactjs app
 ```
 make run
 ```
+
+# Combining
+
+### Back-end
+- GraphQL https://graphql.org/
+- Go GraphQL https://github.com/graph-gophers/graphql-go
+- Go ORM https://github.com/volatiletech/sqlboiler
+- Go DB migration https://github.com/mattes/migrate/blob/master/cli/README.md
+
+### Front-end
+- Javascript form https://github.com/final-form/final-form
+- Javascript GraphQL https://www.apollographql.com/docs/react/
+- React https://reactjs.org/
