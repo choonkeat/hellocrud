@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strconv"
 
 	"github.com/choonkeat/hellocrud/golang/example/dbmodel"
@@ -24,30 +25,45 @@ type Comment struct {
 
 // GraphQL friendly getters
 
+// RowID is the Comment GUID
 func (o Comment) RowID() string {
 	return fmt.Sprintf("Comment%d", o.model.ID) // int
 }
+
+// ID is the Comment id
 func (o Comment) ID() graphql.ID {
 	return graphql.ID(fmt.Sprintf("%d", o.model.ID)) // int
 }
+
+// PostID is the Comment post_id
 func (o Comment) PostID() int32 {
 	return int32(o.model.PostID) // int
 }
+
+// Author is the Comment author
 func (o Comment) Author() string {
 	return o.model.Author // string
 }
+
+// Body is the Comment body
 func (o Comment) Body() string {
 	return o.model.Body // string
 }
+
+// Notes is the Comment notes
 func (o Comment) Notes() *string {
 	return o.model.Notes.Ptr() // null.String
 }
+
+// CreatedAt is the Comment created_at
 func (o Comment) CreatedAt() *graphql.Time {
 	if o.model.CreatedAt.Valid {
 		return &graphql.Time{Time: o.model.CreatedAt.Time}
 	}
 	return nil // null.Time
 }
+
+// UpdatedAt is the Comment updated_at
 func (o Comment) UpdatedAt() *graphql.Time {
 	if o.model.UpdatedAt.Valid {
 		return &graphql.Time{Time: o.model.UpdatedAt.Time}
@@ -55,36 +71,81 @@ func (o Comment) UpdatedAt() *graphql.Time {
 	return nil // null.Time
 }
 
-// Comment is an object to back GraphQL type
+// createCommentInput is an object to back Comment mutation (create) input type
 type createCommentInput struct {
-	PostID    int32
-	Author    string
-	Body      string
-	Notes     *string
-	UpdatedAt *graphql.Time
+	PostID int32   `json:"post_id"`
+	Author string  `json:"author"`
+	Body   string  `json:"body"`
+	Notes  *string `json:"notes"`
 }
 
-// Comment is an object to back GraphQL type
+// updateCommentInput is an object to back Comment mutation (update) input type
 type updateCommentInput struct {
-	PostID    int32
-	Author    string
-	Body      string
-	Notes     *string
-	UpdatedAt *graphql.Time
+	PostID int32   `json:"post_id"`
+	Author string  `json:"author"`
+	Body   string  `json:"body"`
+	Notes  *string `json:"notes"`
 }
 
+// searchCommentArgs is an object to back Comment search arguments type
+type searchCommentArgs struct {
+	PostID    *int32        `json:"post_id"`
+	Author    *string       `json:"author"`
+	Body      *string       `json:"body"`
+	Notes     *string       `json:"notes"`
+	CreatedAt *graphql.Time `json:"created_at"`
+	UpdatedAt *graphql.Time `json:"updated_at"`
+}
+
+// QueryMods returns a list of QueryMod based on the struct values
+func (s *searchCommentArgs) QueryMods() []qm.QueryMod {
+	mods := []qm.QueryMod{}
+	// Get reflect value
+	v := reflect.ValueOf(s).Elem()
+	// Iterate struct fields
+	for i := 0; i < v.NumField(); i++ {
+		field := v.Type().Field(i) // StructField
+		value := v.Field(i)        // Value
+		if value.IsNil() || !value.IsValid() {
+			// Skip if field is nil
+			continue
+		}
+
+		// Get column name from tags
+		column, hasColumnName := field.Tag.Lookup("json")
+		// Skip if no DB definition
+		if !hasColumnName {
+			continue
+		}
+
+		operator := "="
+		val := value.Elem().Interface()
+		if dataType := field.Type.String(); (dataType == "string" || dataType == "*string") &&
+			val.(string) != "" {
+			operator = "LIKE"
+			val = fmt.Sprintf("%%%s%%", val)
+		}
+		mods = append(mods, qm.And(fmt.Sprintf("%s %s ?", column, operator), val))
+	}
+	return mods
+}
+
+// CommentsCollection is the struct representing a collection of GraphQL types
 type CommentsCollection struct {
 	nodes []Comment
 	// future meta data goes here, e.g. count
 }
 
+// Nodes returns the list of GraphQL types
 func (c CommentsCollection) Nodes(ctx context.Context) []Comment {
 	return c.nodes
 }
 
+// AllComments retrieves Comments based on the provided search parameters
 func (r *Resolver) AllComments(ctx context.Context, args struct {
 	Since    *graphql.ID
 	PageSize int32
+	Search   *searchCommentArgs
 }) (CommentsCollection, error) {
 	result := CommentsCollection{}
 	mods := []qm.QueryMod{qm.Limit(int(args.PageSize))}
@@ -95,6 +156,9 @@ func (r *Resolver) AllComments(ctx context.Context, args struct {
 			return result, err
 		}
 		mods = append(mods, qm.Offset(int(i)))
+	}
+	if args.Search != nil {
+		mods = append(mods, args.Search.QueryMods()...)
 	}
 	slice, err := dbmodel.Comments(r.db, mods...).All()
 	if err != nil {
@@ -107,6 +171,7 @@ func (r *Resolver) AllComments(ctx context.Context, args struct {
 	return result, nil
 }
 
+// CommentByID retrieves Comment by ID
 func (r *Resolver) CommentByID(ctx context.Context, args struct {
 	ID graphql.ID
 }) (Comment, error) {
@@ -115,8 +180,9 @@ func (r *Resolver) CommentByID(ctx context.Context, args struct {
 	if err != nil {
 		return result, errors.Wrapf(err, "CommentByID(%#v)", args)
 	}
+	id := int(i)
 
-	m, err := dbmodel.FindComment(r.db, int(i))
+	m, err := dbmodel.FindComment(r.db, id)
 	if err != nil {
 		return result, errors.Wrapf(err, "CommentByID(%#v)", args)
 	} else if m == nil {
@@ -125,6 +191,7 @@ func (r *Resolver) CommentByID(ctx context.Context, args struct {
 	return Comment{model: *m, db: r.db}, nil
 }
 
+// CreateComment creates a Comment based on the provided input
 func (r *Resolver) CreateComment(ctx context.Context, args struct {
 	Input createCommentInput
 }) (Comment, error) {
@@ -144,6 +211,7 @@ func (r *Resolver) CreateComment(ctx context.Context, args struct {
 	return Comment{model: m, db: r.db}, nil
 }
 
+// UpdateCommentByID updates a Comment based on the provided ID and input
 func (r *Resolver) UpdateCommentByID(ctx context.Context, args struct {
 	ID    graphql.ID
 	Input updateCommentInput
@@ -153,8 +221,9 @@ func (r *Resolver) UpdateCommentByID(ctx context.Context, args struct {
 	if err != nil {
 		return result, errors.Wrapf(err, "CommentByID(%#v)", args)
 	}
+	id := int(i)
 
-	m, err := dbmodel.FindComment(r.db, int(i))
+	m, err := dbmodel.FindComment(r.db, id)
 	if err != nil {
 		return result, errors.Wrapf(err, "updateCommentByID(%#v)", args)
 	} else if m == nil {
@@ -174,6 +243,7 @@ func (r *Resolver) UpdateCommentByID(ctx context.Context, args struct {
 	return Comment{model: *m, db: r.db}, nil
 }
 
+// DeleteCommentByID deletes a Comment based on the provided ID
 func (r *Resolver) DeleteCommentByID(ctx context.Context, args struct {
 	ID graphql.ID
 }) (Comment, error) {
@@ -182,8 +252,9 @@ func (r *Resolver) DeleteCommentByID(ctx context.Context, args struct {
 	if err != nil {
 		return result, errors.Wrapf(err, "CommentByID(%#v)", args)
 	}
+	id := int(i)
 
-	m, err := dbmodel.FindComment(r.db, int(i))
+	m, err := dbmodel.FindComment(r.db, id)
 	if err != nil {
 		return result, errors.Wrapf(err, "updateCommentByID(%#v)", args)
 	} else if m == nil {

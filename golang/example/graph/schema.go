@@ -5,13 +5,15 @@ package graph
 
 import graphql "github.com/graph-gophers/graphql-go"
 
+// Schema is the GraphQL schema
 var Schema = `
+scalar Time
+scalar Int64
 
 schema {
   query: Query
   mutation: Mutation
 }
-scalar Time
 
 type Query {
 
@@ -19,6 +21,7 @@ type Query {
   allComments(
     since: ID
     pageSize: Int!
+    search: SearchCommentArgs
   ): CommentsCollection!
 
   commentByID(
@@ -29,6 +32,7 @@ type Query {
   allPosts(
     since: ID
     pageSize: Int!
+    search: SearchPostArgs
   ): PostsCollection!
 
   postByID(
@@ -71,7 +75,7 @@ type Mutation {
 
 type Comment {
 	
-		# Convenient guid for react component @key attribute
+		# Convenient GUID for react component @key attribute
 		rowId: String!
 		id: ID!
 		postID: Int!
@@ -92,7 +96,6 @@ input CreateCommentInput {
 	  author: String!
 	  body: String!
 	  notes: String
-	  updatedAt: Time
 }
 
 input UpdateCommentInput {
@@ -101,12 +104,19 @@ input UpdateCommentInput {
 	  author: String!
 	  body: String!
 	  notes: String
-	  updatedAt: Time
+}
+
+input SearchCommentArgs {
+	
+	  postID: Int
+	  author: String
+	  body: String
+	  notes: String
 }
 
 type Post {
 	
-		# Convenient guid for react component @key attribute
+		# Convenient GUID for react component @key attribute
 		rowId: String!
 		id: ID!
 		title: String!
@@ -127,7 +137,6 @@ input CreatePostInput {
 	  author: String!
 	  body: String!
 	  notes: String
-	  updatedAt: Time
 }
 
 input UpdatePostInput {
@@ -136,7 +145,14 @@ input UpdatePostInput {
 	  author: String!
 	  body: String!
 	  notes: String
-	  updatedAt: Time
+}
+
+input SearchPostArgs {
+	
+	  title: String
+	  author: String
+	  body: String
+	  notes: String
 }
 
 

@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strconv"
 
 	"github.com/choonkeat/hellocrud/golang/example/dbmodel"
@@ -24,30 +25,45 @@ type Post struct {
 
 // GraphQL friendly getters
 
+// RowID is the Post GUID
 func (o Post) RowID() string {
 	return fmt.Sprintf("Post%d", o.model.ID) // int
 }
+
+// ID is the Post id
 func (o Post) ID() graphql.ID {
 	return graphql.ID(fmt.Sprintf("%d", o.model.ID)) // int
 }
+
+// Title is the Post title
 func (o Post) Title() string {
 	return o.model.Title // string
 }
+
+// Author is the Post author
 func (o Post) Author() string {
 	return o.model.Author // string
 }
+
+// Body is the Post body
 func (o Post) Body() string {
 	return o.model.Body // string
 }
+
+// Notes is the Post notes
 func (o Post) Notes() *string {
 	return o.model.Notes.Ptr() // null.String
 }
+
+// CreatedAt is the Post created_at
 func (o Post) CreatedAt() *graphql.Time {
 	if o.model.CreatedAt.Valid {
 		return &graphql.Time{Time: o.model.CreatedAt.Time}
 	}
 	return nil // null.Time
 }
+
+// UpdatedAt is the Post updated_at
 func (o Post) UpdatedAt() *graphql.Time {
 	if o.model.UpdatedAt.Valid {
 		return &graphql.Time{Time: o.model.UpdatedAt.Time}
@@ -55,36 +71,81 @@ func (o Post) UpdatedAt() *graphql.Time {
 	return nil // null.Time
 }
 
-// Post is an object to back GraphQL type
+// createPostInput is an object to back Post mutation (create) input type
 type createPostInput struct {
-	Title     string
-	Author    string
-	Body      string
-	Notes     *string
-	UpdatedAt *graphql.Time
+	Title  string  `json:"title"`
+	Author string  `json:"author"`
+	Body   string  `json:"body"`
+	Notes  *string `json:"notes"`
 }
 
-// Post is an object to back GraphQL type
+// updatePostInput is an object to back Post mutation (update) input type
 type updatePostInput struct {
-	Title     string
-	Author    string
-	Body      string
-	Notes     *string
-	UpdatedAt *graphql.Time
+	Title  string  `json:"title"`
+	Author string  `json:"author"`
+	Body   string  `json:"body"`
+	Notes  *string `json:"notes"`
 }
 
+// searchPostArgs is an object to back Post search arguments type
+type searchPostArgs struct {
+	Title     *string       `json:"title"`
+	Author    *string       `json:"author"`
+	Body      *string       `json:"body"`
+	Notes     *string       `json:"notes"`
+	CreatedAt *graphql.Time `json:"created_at"`
+	UpdatedAt *graphql.Time `json:"updated_at"`
+}
+
+// QueryMods returns a list of QueryMod based on the struct values
+func (s *searchPostArgs) QueryMods() []qm.QueryMod {
+	mods := []qm.QueryMod{}
+	// Get reflect value
+	v := reflect.ValueOf(s).Elem()
+	// Iterate struct fields
+	for i := 0; i < v.NumField(); i++ {
+		field := v.Type().Field(i) // StructField
+		value := v.Field(i)        // Value
+		if value.IsNil() || !value.IsValid() {
+			// Skip if field is nil
+			continue
+		}
+
+		// Get column name from tags
+		column, hasColumnName := field.Tag.Lookup("json")
+		// Skip if no DB definition
+		if !hasColumnName {
+			continue
+		}
+
+		operator := "="
+		val := value.Elem().Interface()
+		if dataType := field.Type.String(); (dataType == "string" || dataType == "*string") &&
+			val.(string) != "" {
+			operator = "LIKE"
+			val = fmt.Sprintf("%%%s%%", val)
+		}
+		mods = append(mods, qm.And(fmt.Sprintf("%s %s ?", column, operator), val))
+	}
+	return mods
+}
+
+// PostsCollection is the struct representing a collection of GraphQL types
 type PostsCollection struct {
 	nodes []Post
 	// future meta data goes here, e.g. count
 }
 
+// Nodes returns the list of GraphQL types
 func (c PostsCollection) Nodes(ctx context.Context) []Post {
 	return c.nodes
 }
 
+// AllPosts retrieves Posts based on the provided search parameters
 func (r *Resolver) AllPosts(ctx context.Context, args struct {
 	Since    *graphql.ID
 	PageSize int32
+	Search   *searchPostArgs
 }) (PostsCollection, error) {
 	result := PostsCollection{}
 	mods := []qm.QueryMod{qm.Limit(int(args.PageSize))}
@@ -95,6 +156,9 @@ func (r *Resolver) AllPosts(ctx context.Context, args struct {
 			return result, err
 		}
 		mods = append(mods, qm.Offset(int(i)))
+	}
+	if args.Search != nil {
+		mods = append(mods, args.Search.QueryMods()...)
 	}
 	slice, err := dbmodel.Posts(r.db, mods...).All()
 	if err != nil {
@@ -107,6 +171,7 @@ func (r *Resolver) AllPosts(ctx context.Context, args struct {
 	return result, nil
 }
 
+// PostByID retrieves Post by ID
 func (r *Resolver) PostByID(ctx context.Context, args struct {
 	ID graphql.ID
 }) (Post, error) {
@@ -115,8 +180,9 @@ func (r *Resolver) PostByID(ctx context.Context, args struct {
 	if err != nil {
 		return result, errors.Wrapf(err, "PostByID(%#v)", args)
 	}
+	id := int(i)
 
-	m, err := dbmodel.FindPost(r.db, int(i))
+	m, err := dbmodel.FindPost(r.db, id)
 	if err != nil {
 		return result, errors.Wrapf(err, "PostByID(%#v)", args)
 	} else if m == nil {
@@ -125,6 +191,7 @@ func (r *Resolver) PostByID(ctx context.Context, args struct {
 	return Post{model: *m, db: r.db}, nil
 }
 
+// CreatePost creates a Post based on the provided input
 func (r *Resolver) CreatePost(ctx context.Context, args struct {
 	Input createPostInput
 }) (Post, error) {
@@ -144,6 +211,7 @@ func (r *Resolver) CreatePost(ctx context.Context, args struct {
 	return Post{model: m, db: r.db}, nil
 }
 
+// UpdatePostByID updates a Post based on the provided ID and input
 func (r *Resolver) UpdatePostByID(ctx context.Context, args struct {
 	ID    graphql.ID
 	Input updatePostInput
@@ -153,8 +221,9 @@ func (r *Resolver) UpdatePostByID(ctx context.Context, args struct {
 	if err != nil {
 		return result, errors.Wrapf(err, "PostByID(%#v)", args)
 	}
+	id := int(i)
 
-	m, err := dbmodel.FindPost(r.db, int(i))
+	m, err := dbmodel.FindPost(r.db, id)
 	if err != nil {
 		return result, errors.Wrapf(err, "updatePostByID(%#v)", args)
 	} else if m == nil {
@@ -174,6 +243,7 @@ func (r *Resolver) UpdatePostByID(ctx context.Context, args struct {
 	return Post{model: *m, db: r.db}, nil
 }
 
+// DeletePostByID deletes a Post based on the provided ID
 func (r *Resolver) DeletePostByID(ctx context.Context, args struct {
 	ID graphql.ID
 }) (Post, error) {
@@ -182,8 +252,9 @@ func (r *Resolver) DeletePostByID(ctx context.Context, args struct {
 	if err != nil {
 		return result, errors.Wrapf(err, "PostByID(%#v)", args)
 	}
+	id := int(i)
 
-	m, err := dbmodel.FindPost(r.db, int(i))
+	m, err := dbmodel.FindPost(r.db, id)
 	if err != nil {
 		return result, errors.Wrapf(err, "updatePostByID(%#v)", args)
 	} else if m == nil {
