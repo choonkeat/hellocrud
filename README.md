@@ -1,4 +1,18 @@
-# Docker
+# Combining
+
+
+### Back-end
+- GraphQL https://graphql.org/
+- Go GraphQL https://github.com/graph-gophers/graphql-go
+- Go ORM https://github.com/volatiletech/sqlboiler
+- Go DB migration https://github.com/mattes/migrate/blob/master/cli/README.md
+
+### Front-end
+- Javascript form https://github.com/final-form/final-form
+- Javascript GraphQL https://www.apollographql.com/docs/react/
+- React https://reactjs.org/
+
+# Getting started (Docker)
 
 ```
 docker-compose up
@@ -22,7 +36,7 @@ web_1       | To create a production build, use yarn build.
 - GraphiQL interface http://localhost:5000/graphiql
 - GraphQL endpoint http://localhost:5000/graphql
 
-# Development
+# Getting started (Development)
 
 Setup the db (see `example.sql`) and generate the graphql server code
 
