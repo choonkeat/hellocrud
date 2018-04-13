@@ -1,0 +1,30 @@
+version: '3'
+services:
+  web:
+    image: "node:8-alpine"
+    ports:
+      - "3000:3000"
+    working_dir: /app
+    volumes:
+      - ./js:/app
+    command: ["/bin/ash", "cmd/start-in-docker.sh"]
+  graphql:
+    build: golang
+    ports:
+      - "5000:5000"
+    environment:
+      DATABASE_URL: "postgres://postgres:postgres@postgres/hellocrud_development?sslmode=disable"
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: hellocrud_development
+    working_dir: /go/src/github.com/choonkeat/hellocrud/golang
+    volumes:
+      - ./golang:/go/src/github.com/choonkeat/hellocrud/golang
+    command: ["/bin/ash", "cmd/wait-for-postgres.sh", "make"]
+  postgres:
+    image: "postgres"
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: hellocrud_development
