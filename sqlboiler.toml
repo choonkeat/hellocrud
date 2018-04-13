@@ -1,7 +1,0 @@
-[postgres]
-  user="postgres"
-  pass="postgres"
-  host="127.0.0.1"
-  port=5432
-  dbname="hellocrud_development"
-  sslmode="disable"
