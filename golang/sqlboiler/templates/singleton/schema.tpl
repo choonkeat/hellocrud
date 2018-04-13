@@ -12,13 +12,14 @@ type Query {
 {{range $table := .Tables}}
 {{- $tableNameSingular := .Name | singular -}}
 {{- $modelName := $tableNameSingular | titleCase -}}
+{{- $modelNamePlural := $table.Name | plural | titleCase -}}
 {{- $modelNameCamel := $tableNameSingular | camelCase}}
 
-  all{{$modelName}}s(
+  all{{$modelNamePlural}}(
     since: ID
     pageSize: Int!
     search: Search{{$modelName}}Args
-  ): {{$modelName}}sCollection!
+  ): {{$modelNamePlural}}Collection!
 
   {{$modelNameCamel}}ByID(
     id: ID!
@@ -30,6 +31,7 @@ type Mutation {
 {{range $table := .Tables}}
 {{- $tableNameSingular := .Name | singular -}}
 {{- $modelName := $tableNameSingular | titleCase -}}
+{{- $modelNamePlural := $table.Name | plural | titleCase -}}
 {{- $modelNameCamel := $tableNameSingular | camelCase}}
 
   create{{$modelName}}(
@@ -50,8 +52,10 @@ type Mutation {
 {{range $table := .Tables}}
 {{- $tableNameSingular := .Name | singular -}}
 {{- $modelName := $tableNameSingular | titleCase -}}
+{{- $modelNamePlural := $table.Name | plural | titleCase -}}
 {{- $modelNameCamel := $tableNameSingular | camelCase -}}
 {{- $pkColNames := $table.PKey.Columns -}}
+{{- $fkColDefs := $table.FKeys -}}
 
 type {{$modelName}} {
 	{{range $column := $table.Columns }}
@@ -103,9 +107,21 @@ type {{$modelName}} {
 		{{camelCase $column.Name}}: String!
 	{{- end -}}
 	{{- end }}
+	{{- /* Add to FK relationships */}}
+	{{- range $r := $fkColDefs }}
+		{{ $r.ForeignTable | singular | camelCase }}: {{ $r.ForeignTable | singular | titleCase }}
+	{{- end }}
+	{{- /* Add to one relationships */}}
+	{{- range $r := $table.ToOneRelationships }}
+		{{ $r.ForeignTable | singular | camelCase }}: {{ $r.ForeignTable | singular | titleCase }}
+	{{- end }}
+	{{- /* Add to many relationships */}}
+	{{- range $r := $table.ToManyRelationships }}
+		{{$r.ForeignTable | plural | camelCase }}: {{ $r.ForeignTable | plural | titleCase }}Collection
+	{{- end }}
 }
 
-type {{$modelName}}sCollection {
+type {{$modelNamePlural}}Collection {
 	nodes: [{{$modelName}}!]!
 }
 

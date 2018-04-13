@@ -1,27 +1,48 @@
+{{- $dot := . -}}
 {{- $tableNameSingular := .Table.Name | singular -}}
 {{- $modelName := $tableNameSingular | titleCase -}}
+{{- $modelNamePlural := .Table.Name | plural | titleCase -}}
 {{- $modelNameCamel := $tableNameSingular | camelCase}}
 {{- $pkColDefs := sqlColDefinitions .Table.Columns .Table.PKey.Columns}}
 
-// {{$modelName}}sCollection is the struct representing a collection of GraphQL types
-type {{$modelName}}sCollection struct {
+// {{$modelNamePlural}}Collection is the struct representing a collection of GraphQL types
+type {{$modelNamePlural}}Collection struct {
 	nodes []{{$modelName}}
 	// future meta data goes here, e.g. count
 }
 
 // Nodes returns the list of GraphQL types
-func (c {{$modelName}}sCollection) Nodes(ctx context.Context) []{{$modelName}} {
+func (c {{$modelNamePlural}}Collection) Nodes(ctx context.Context) []{{$modelName}} {
 	return c.nodes
 }
 
-// All{{$modelName}}s retrieves {{$modelName}}s based on the provided search parameters
-func (r *Resolver) All{{$modelName}}s(ctx context.Context, args struct {
+// All{{$modelNamePlural}} retrieves {{$modelNamePlural}} based on the provided search parameters
+func (r *Resolver) All{{$modelNamePlural}}(ctx context.Context, args struct {
 	Since    *graphql.ID
 	PageSize int32
 	Search *search{{$modelName}}Args
-}) ({{$modelName}}sCollection, error) {
-	result := {{$modelName}}sCollection{}
-	mods := []qm.QueryMod{qm.Limit(int(args.PageSize))}
+}) ({{$modelNamePlural}}Collection, error) {
+	result := {{$modelNamePlural}}Collection{}
+	mods := []qm.QueryMod{
+		qm.Limit(int(args.PageSize)),
+		// TODO: Add eager loading based on requested fields
+		{{/* Add eager loaders on FK relationships */}}
+		{{- range .Table.FKeys -}}
+		{{- $txt := txtsFromFKey $dot.Tables $dot.Table . -}}
+		qm.Load("{{$txt.Function.Name}}"),
+		{{- end -}}
+		{{/* Add eager loaders on all to one relationships */}}
+		{{- range .Table.ToOneRelationships -}}
+		{{- $txt := txtsFromOneToOne $dot.Tables $dot.Table . -}}
+		qm.Load("{{$txt.Function.Name}}"),
+		{{- end -}}
+		{{/* Add eager loaders on all to many relationships */}}
+		{{- range .Table.ToManyRelationships -}}
+		{{- $txt := txtsFromToMany $dot.Tables $dot.Table . -}}
+		qm.Load("{{$txt.Function.Name}}"),
+		{{- end }}
+	}
+	
 	if args.Since != nil {
 		s := string(*args.Since)
 		i, err := strconv.ParseInt(s, 10, 64)
@@ -33,9 +54,9 @@ func (r *Resolver) All{{$modelName}}s(ctx context.Context, args struct {
 	if args.Search != nil {
 		mods = append(mods, args.Search.QueryMods()...)
 	}
-	slice, err := dbmodel.{{$modelName}}s(r.db, mods...).All()
+	slice, err := dbmodel.{{$modelNamePlural}}(r.db, mods...).All()
 	if err != nil {
-		return result, errors.Wrapf(err, "all{{$modelName}}s(%#v)", args)
+		return result, errors.Wrapf(err, "all{{$modelNamePlural}}(%#v)", args)
 	}
 	for _, m := range slice {
 		result.nodes = append(result.nodes, {{$modelName}}{model: *m, db: r.db})
