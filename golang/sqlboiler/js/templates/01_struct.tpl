@@ -14,7 +14,7 @@
 // import { Link } from 'react-router-dom'
 //
 // // TupleForm for editing or creating a tuple
-// const TupleForm = (props) => {
+// const TupleForm = ({ current, mutate, history, data, errors }) => {
 //   let onSubmit = (form) => {
 //     delete form.__typename
 //     for (var k in form) {
@@ -27,7 +27,7 @@
 //         input: { ...form }
 //       }
 //     }
-//     if (props.current) {
+//     if (current) {
 //       let formId = form.id
 //       delete form.id
 //       mutateInput.variables = {
@@ -35,9 +35,9 @@
 //         input: { ...form }
 //       }
 //     }
-//     props.mutate(mutateInput).then(({ data }) => {
-//       props.history.push('/{{ $tableNamePlural }}')
-//       props.data.refetch()
+//     mutate(mutateInput).then(({ data }) => {
+//       history.push('/{{ $tableNamePlural }}')
+//       data.refetch()
 //     }).catch((error) => {
 //       console.log('there was an error sending the query', error)
 //     })
@@ -45,17 +45,17 @@
 //   }
 //
 //   return <div className='card-body'>
-//     <Link to='/{{ $tableNamePlural }}'>&larr; {{ $modelName | plural }}</Link><h1 className='card-title'>{{ $modelName }} #{props.current ? props.current.rowId : 'New'}</h1>
+//     <Link to='/{{ $tableNamePlural }}'>&larr; {{ $modelName | plural }}</Link><h1 className='card-title'>{{ $modelName }} #{current ? current.rowId : 'New'}</h1>
 //     <Form
 //       onSubmit={onSubmit}
-//       initialValues={props.current}
+//       initialValues={current}
 //       render={({ handleSubmit, reset, submitting, pristine, values }) => (
 //         <form onSubmit={handleSubmit}>
-//           {(props.errors || []).map(err => {
+//           {(errors || []).map(err => {
 //             return <p>Error: {JSON.stringify(err)}</p>
 //           })}
-//           {props.current ? (<div>
-//             <input type='hidden' name='rowId' value={props.current.rowId} />
+//           {current ? (<div>
+//             <input type='hidden' name='rowId' value={current.rowId} />
 //           </div>) : null}
 {{ range $column := .Table.Columns -}}
 {{ if eq $column.Name "created_at" -}}
@@ -82,32 +82,32 @@
 // }
 //
 // // ShowTuple displays a tuple, be creative in your HTML
-// const ShowTuple = (props) => {
+// const ShowTuple = ({ current }) => {
 //   return <div className='card-body'>
-//     <Link to='/{{ $tableNamePlural }}'>&larr; {{ $modelName | plural }} </Link><h1 className='card-title'>{{ $modelName }} #{props.current.rowId}</h1>
+//     <Link to='/{{ $tableNamePlural }}'>&larr; {{ $modelName | plural }} </Link><h1 className='card-title'>{{ $modelName }} #{current.rowId}</h1>
 //     <table>
 //       <tbody>
 {{ range $column := .Table.Columns -}}
 //         <tr>
 //           <th>{{ $column.Name | camelCase }}</th>
-//           <td>{props.current.{{ $column.Name | camelCase }}}</td>
+//           <td>{current.{{ $column.Name | camelCase }}}</td>
 //         </tr>
 {{ end -}}
 //       </tbody>
 //     </table>
-//     <Link to={`/{{ $tableNamePlural }}/${props.current.id}/edit`}><button className='btn btn-secondary'>Edit</button></Link>
+//     <Link to={`/{{ $tableNamePlural }}/${current.id}/edit`}><button className='btn btn-secondary'>Edit</button></Link>
 //   </div>
 // }
 //
 // // DeleteTuple is a button (or change it to something else)
-// const DeleteTuple = (props) => {
+// const DeleteTuple = ({ id, delete{{ $modelName }}ByID, data }) => {
 //   let onClick = () => {
-//     props.delete{{ $modelName }}ByID({
+//     delete{{ $modelName }}ByID({
 //       variables: {
-//         id: props.id
+//         id: id
 //       }
 //     }).then(({ data }) => {
-//       props.data.refetch()
+//       data.refetch()
 //     }).catch((error) => {
 //       console.log('there was an error sending the query', JSON.stringify(error))
 //     })
@@ -164,13 +164,13 @@
 {{ end -}}
 //     }
 //   }
-// `)((props) => {
-//   if (props.loading || (!props.data.{{ $modelNameCamel }}ByID)) {
+// `)(({ loading, data, children }) => {
+//   if (loading || (!data.{{ $modelNameCamel }}ByID)) {
 //     return <p>Loading&hellip;</p>
 //   }
 //   return <div>
-//     {React.Children.map(props.children, (child) => {
-//       return React.cloneElement(child, {current: props.data.{{ $modelNameCamel }}ByID})
+//     {React.Children.map(children, (child) => {
+//       return React.cloneElement(child, {current: data.{{ $modelNameCamel }}ByID})
 //     })}
 //   </div>
 // })

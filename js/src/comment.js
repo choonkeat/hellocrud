@@ -6,7 +6,7 @@ import { Switch, Route } from 'react-router'
 import { Link } from 'react-router-dom'
 
 // TupleForm for editing or creating a tuple
-const TupleForm = (props) => {
+const TupleForm = ({ current, mutate, history, data, errors }) => {
   let onSubmit = (form) => {
     delete form.__typename
     for (var k in form) {
@@ -19,7 +19,7 @@ const TupleForm = (props) => {
         input: { ...form }
       }
     }
-    if (props.current) {
+    if (current) {
       let formId = form.id
       delete form.id
       mutateInput.variables = {
@@ -27,9 +27,9 @@ const TupleForm = (props) => {
         input: { ...form }
       }
     }
-    props.mutate(mutateInput).then(({ data }) => {
-      props.history.push('/comments')
-      props.data.refetch()
+    mutate(mutateInput).then(({ data }) => {
+      history.push('/comments')
+      data.refetch()
     }).catch((error) => {
       console.log('there was an error sending the query', error)
     })
@@ -37,17 +37,17 @@ const TupleForm = (props) => {
   }
 
   return <div className='card-body'>
-    <Link to='/comments'>&larr; Comments</Link><h1 className='card-title'>Comment #{props.current ? props.current.rowId : 'New'}</h1>
+    <Link to='/comments'>&larr; Comments</Link><h1 className='card-title'>Comment #{current ? current.rowId : 'New'}</h1>
     <Form
       onSubmit={onSubmit}
-      initialValues={props.current}
+      initialValues={current}
       render={({ handleSubmit, reset, submitting, pristine, values }) => (
         <form onSubmit={handleSubmit}>
-          {(props.errors || []).map(err => {
+          {(errors || []).map(err => {
             return <p>Error: {JSON.stringify(err)}</p>
           })}
-          {props.current ? (<div>
-            <input type='hidden' name='rowId' value={props.current.rowId} />
+          {current ? (<div>
+            <input type='hidden' name='rowId' value={current.rowId} />
           </div>) : null}
           <div className='form-group row'>
             <label className='col-sm-2 col-form-label'>postID</label>
@@ -82,54 +82,54 @@ const TupleForm = (props) => {
 }
 
 // ShowTuple displays a tuple, be creative in your HTML
-const ShowTuple = (props) => {
+const ShowTuple = ({ current }) => {
   return <div className='card-body'>
-    <Link to='/comments'>&larr; Comments </Link><h1 className='card-title'>Comment #{props.current.rowId}</h1>
+    <Link to='/comments'>&larr; Comments </Link><h1 className='card-title'>Comment #{current.rowId}</h1>
     <table>
       <tbody>
         <tr>
           <th>id</th>
-          <td>{props.current.id}</td>
+          <td>{current.id}</td>
         </tr>
         <tr>
           <th>postID</th>
-          <td>{props.current.postID}</td>
+          <td>{current.postID}</td>
         </tr>
         <tr>
           <th>author</th>
-          <td>{props.current.author}</td>
+          <td>{current.author}</td>
         </tr>
         <tr>
           <th>body</th>
-          <td>{props.current.body}</td>
+          <td>{current.body}</td>
         </tr>
         <tr>
           <th>notes</th>
-          <td>{props.current.notes}</td>
+          <td>{current.notes}</td>
         </tr>
         <tr>
           <th>createdAt</th>
-          <td>{props.current.createdAt}</td>
+          <td>{current.createdAt}</td>
         </tr>
         <tr>
           <th>updatedAt</th>
-          <td>{props.current.updatedAt}</td>
+          <td>{current.updatedAt}</td>
         </tr>
       </tbody>
     </table>
-    <Link to={`/comments/${props.current.id}/edit`}><button className='btn btn-secondary'>Edit</button></Link>
+    <Link to={`/comments/${current.id}/edit`}><button className='btn btn-secondary'>Edit</button></Link>
   </div>
 }
 
 // DeleteTuple is a button (or change it to something else)
-const DeleteTuple = (props) => {
+const DeleteTuple = ({ id, deleteCommentByID, data }) => {
   let onClick = () => {
-    props.deleteCommentByID({
+    deleteCommentByID({
       variables: {
-        id: props.id
+        id: id
       }
     }).then(({ data }) => {
-      props.data.refetch()
+      data.refetch()
     }).catch((error) => {
       console.log('there was an error sending the query', JSON.stringify(error))
     })
@@ -198,13 +198,13 @@ const GetTuple = graphql(gql`
       updatedAt
     }
   }
-`)((props) => {
-  if (props.loading || (!props.data.commentByID)) {
+`)(({ loading, data, children }) => {
+  if (loading || (!data.commentByID)) {
     return <p>Loading&hellip;</p>
   }
   return <div>
-    {React.Children.map(props.children, (child) => {
-      return React.cloneElement(child, {current: props.data.commentByID})
+    {React.Children.map(children, (child) => {
+      return React.cloneElement(child, {current: data.commentByID})
     })}
   </div>
 })
