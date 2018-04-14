@@ -5,12 +5,13 @@ run: generate
 	env DEBUG=$(DEBUG) DATABASE_URL=$(DATABASE_URL) go run example/main.go
 
 generate: dbmigrate
-	# setup toml
+	# 1. setup toml to let `sqlboiler` retrieve schema from db
 	go run cmd/url2toml/main.go -url "$(DATABASE_URL)" > sqlboiler.toml
-	# for db
+	# 2. generate db orm
 	sqlboiler --output example/dbmodel --pkgname dbmodel --schema app $(DBTYPE)
-	# for graphql
-	sqlboiler --output example/graph   --pkgname graph   --schema app --basedir sqlboiler $(DBTYPE)
+	# 2. generate graphql types and resolvers
+	sqlboiler --output example/graph   --pkgname graph   --schema app --basedir sqlboiler/graph $(DBTYPE)
+	# 3. clean up generated go code
 	goimports -w example/*.go example/graph/*.go example/dbmodel/*.go
 
 dbmigrate:
