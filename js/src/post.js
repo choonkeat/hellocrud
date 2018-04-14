@@ -6,16 +6,20 @@ import { Switch, Route } from 'react-router'
 import { Link } from 'react-router-dom'
 
 // TupleForm for editing or creating a tuple
-const TupleForm = (props) => {
+const TupleForm = ({ current, mutate, history, data, errors }) => {
   let onSubmit = (form) => {
     delete form.__typename
-
+    for (var k in form) {
+      if (form.hasOwnProperty(k) && k.endsWith('ID') && ('' + form[k]).match(/^[-]?\d+\.?\d*$/)) {
+        form[k] = +form[k]
+      }
+    }
     let mutateInput = {
       variables: {
         input: { ...form }
       }
     }
-    if (props.current) {
+    if (current) {
       let formId = form.id
       delete form.id
       mutateInput.variables = {
@@ -23,9 +27,9 @@ const TupleForm = (props) => {
         input: { ...form }
       }
     }
-    props.mutate(mutateInput).then(({ data }) => {
-      props.history.push('/posts')
-      props.data.refetch()
+    mutate(mutateInput).then(({ data }) => {
+      history.push('/posts')
+      data.refetch()
     }).catch((error) => {
       console.log('there was an error sending the query', error)
     })
@@ -33,37 +37,37 @@ const TupleForm = (props) => {
   }
 
   return <div className='card-body'>
-    <Link to='/posts'>&larr; Posts</Link><h1 className='card-title'>Post #{props.current ? props.current.rowId : 'New'}</h1>
+    <Link to='/posts'>&larr; Posts</Link><h1 className='card-title'>Post #{current ? current.rowId : 'New'}</h1>
     <Form
       onSubmit={onSubmit}
-      initialValues={props.current}
+      initialValues={current}
       render={({ handleSubmit, reset, submitting, pristine, values }) => (
         <form onSubmit={handleSubmit}>
-          {(props.errors || []).map(err => {
+          {(errors || []).map(err => {
             return <p>Error: {JSON.stringify(err)}</p>
           })}
-          {props.current ? (<div>
-            <input type='hidden' name='rowId' value={props.current.rowId} />
+          {current ? (<div>
+            <input type='hidden' name='rowId' value={current.rowId} />
           </div>) : null}
           <div className='form-group row'>
-            <label className='col-sm-2 col-form-label'>Title</label>
+            <label className='col-sm-2 col-form-label'>title</label>
             <Field className='form-control col-sm-10' name='title' component='input' type='text' placeholder='title' />
             <small className='form-text text-muted offset-sm-2'>tip: title</small>
           </div>
           <div className='form-group row'>
-            <label className='col-sm-2 col-form-label'>Author</label>
+            <label className='col-sm-2 col-form-label'>author</label>
             <Field className='form-control col-sm-10' name='author' component='input' type='text' placeholder='author' />
             <small className='form-text text-muted offset-sm-2'>tip: author</small>
           </div>
           <div className='form-group row'>
-            <label className='col-sm-2 col-form-label'>Notes</label>
-            <Field className='form-control col-sm-10' name='notes' component='input' type='text' placeholder='notes' />
-            <small className='form-text text-muted offset-sm-2'>tip: notes</small>
-          </div>
-          <div className='form-group row'>
-            <label className='col-sm-2 col-form-label'>Body</label>
+            <label className='col-sm-2 col-form-label'>body</label>
             <Field className='form-control col-sm-10' name='body' component='input' type='text' placeholder='body' />
             <small className='form-text text-muted offset-sm-2'>tip: body</small>
+          </div>
+          <div className='form-group row'>
+            <label className='col-sm-2 col-form-label'>notes</label>
+            <Field className='form-control col-sm-10' name='notes' component='input' type='text' placeholder='notes' />
+            <small className='form-text text-muted offset-sm-2'>tip: notes</small>
           </div>
           <div className='form-group row'>
             <div className='offset-sm-2'>
@@ -78,42 +82,54 @@ const TupleForm = (props) => {
 }
 
 // ShowTuple displays a tuple, be creative in your HTML
-const ShowTuple = (props) => {
+const ShowTuple = ({ current }) => {
   return <div className='card-body'>
-    <Link to='/posts'>&larr; Posts </Link><h1 className='card-title'>Post #{props.current.rowId}</h1>
+    <Link to='/posts'>&larr; Posts </Link><h1 className='card-title'>Post #{current.rowId}</h1>
     <table>
       <tbody>
         <tr>
-          <th>Title</th>
-          <td>{props.current.title}</td>
+          <th>id</th>
+          <td>{current.id}</td>
         </tr>
         <tr>
-          <th>Author</th>
-          <td>{props.current.author}</td>
+          <th>title</th>
+          <td>{current.title}</td>
         </tr>
         <tr>
-          <th>Notes</th>
-          <td>{props.current.notes}</td>
+          <th>author</th>
+          <td>{current.author}</td>
         </tr>
         <tr>
-          <th>Body</th>
-          <td>{props.current.body}</td>
+          <th>body</th>
+          <td>{current.body}</td>
+        </tr>
+        <tr>
+          <th>notes</th>
+          <td>{current.notes}</td>
+        </tr>
+        <tr>
+          <th>createdAt</th>
+          <td>{current.createdAt}</td>
+        </tr>
+        <tr>
+          <th>updatedAt</th>
+          <td>{current.updatedAt}</td>
         </tr>
       </tbody>
     </table>
-    <Link to={`/posts/${props.current.id}/edit`}><button className='btn btn-secondary'>Edit</button></Link>
+    <Link to={`/posts/${current.id}/edit`}><button className='btn btn-secondary'>Edit</button></Link>
   </div>
 }
 
 // DeleteTuple is a button (or change it to something else)
-const DeleteTuple = (props) => {
+const DeleteTuple = ({ id, deletePostByID, data }) => {
   let onClick = () => {
-    props.deletePostByID({
+    deletePostByID({
       variables: {
-        id: props.id
+        id: id
       }
     }).then(({ data }) => {
-      props.data.refetch()
+      data.refetch()
     }).catch((error) => {
       console.log('there was an error sending the query', JSON.stringify(error))
     })
@@ -136,10 +152,13 @@ const ListTuples = (props) => {
     <table className='table table-hover'>
       <thead>
         <tr>
-          <th>Title</th>
-          <th>Author</th>
-          <th>Notes</th>
-          <th>Body</th>
+          <th>id</th>
+          <th>title</th>
+          <th>author</th>
+          <th>body</th>
+          <th>notes</th>
+          <th>createdAt</th>
+          <th>updatedAt</th>
           <th />
           <th />
         </tr>
@@ -147,10 +166,13 @@ const ListTuples = (props) => {
       <tbody>
         {((props.data.allPosts && props.data.allPosts.nodes) || []).map(row => {
           return <tr key={row.rowId}>
+            <td><Link to={`/posts/${row.id}`}>{row.id}</Link></td>
             <td><Link to={`/posts/${row.id}`}>{row.title}</Link></td>
             <td><Link to={`/posts/${row.id}`}>{row.author}</Link></td>
-            <td><Link to={`/posts/${row.id}`}>{row.notes}</Link></td>
             <td><Link to={`/posts/${row.id}`}>{row.body}</Link></td>
+            <td><Link to={`/posts/${row.id}`}>{row.notes}</Link></td>
+            <td><Link to={`/posts/${row.id}`}>{row.createdAt}</Link></td>
+            <td><Link to={`/posts/${row.id}`}>{row.updatedAt}</Link></td>
             <td><Link to={`/posts/${row.id}/edit`}><button className='btn btn-secondary'>Edit</button></Link></td>
             <td><DeleteTuple id={row.id} {...props} /></td>
           </tr>
@@ -167,19 +189,22 @@ const GetTuple = graphql(gql`
     postByID(id: $rowid) {
       id
       rowId
+      id
       title
       author
-      notes
       body
+      notes
+      createdAt
+      updatedAt
     }
   }
-`)((props) => {
-  if (props.loading || (!props.data.postByID)) {
+`)(({ loading, data, children }) => {
+  if (loading || (!data.postByID)) {
     return <p>Loading&hellip;</p>
   }
   return <div>
-    {React.Children.map(props.children, (child) => {
-      return React.cloneElement(child, {current: props.data.postByID})
+    {React.Children.map(children, (child) => {
+      return React.cloneElement(child, {current: data.postByID})
     })}
   </div>
 })
@@ -191,10 +216,13 @@ const Component = compose(
         nodes {
           id
           rowId
+          id
           title
           author
-          notes
           body
+          notes
+          createdAt
+          updatedAt
         }
       }
     }
@@ -204,10 +232,13 @@ const Component = compose(
       deletePostByID(id:$id) {
         id
         rowId
+        id
         title
         author
-        notes
         body
+        notes
+        createdAt
+        updatedAt
       }
     }
   `, {name: 'deletePostByID'}),
@@ -216,10 +247,13 @@ const Component = compose(
       createPost(input: $input) {
         id
         rowId
+        id
         title
         author
-        notes
         body
+        notes
+        createdAt
+        updatedAt
       }
     }
   `, {name: 'createPost'}),
@@ -228,10 +262,13 @@ const Component = compose(
       updatePostByID(id: $id, input: $input) {
         id
         rowId
+        id
         title
         author
-        notes
         body
+        notes
+        createdAt
+        updatedAt
       }
     }
   `, {name: 'updatePostByID'})
