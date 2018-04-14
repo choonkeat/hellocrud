@@ -198,7 +198,12 @@ func (r *Resolver) CommentByID(ctx context.Context, args struct {
 	}
 	id := int(i)
 
-	m, err := dbmodel.FindComment(r.db, id)
+	mods := []qm.QueryMod{
+		qm.Where("id = ?", id),
+		// TODO: Add eager loading based on requested fields
+		qm.Load("Post")}
+
+	m, err := dbmodel.Comments(r.db, mods...).One()
 	if err != nil {
 		return result, errors.Wrapf(err, "CommentByID(%#v)", args)
 	} else if m == nil {

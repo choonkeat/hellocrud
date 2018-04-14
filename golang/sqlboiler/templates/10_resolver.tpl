@@ -42,7 +42,7 @@ func (r *Resolver) All{{$modelNamePlural}}(ctx context.Context, args struct {
 		qm.Load("{{$txt.Function.Name}}"),
 		{{- end }}
 	}
-	
+
 	if args.Since != nil {
 		s := string(*args.Since)
 		i, err := strconv.ParseInt(s, 10, 64)
@@ -85,7 +85,27 @@ func (r *Resolver) {{$modelName}}ByID(ctx context.Context, args struct {
 	{{- end -}}
 	{{- end}}
 
-	m, err := dbmodel.Find{{$modelName}}(r.db, id)
+	mods := []qm.QueryMod{
+		qm.Where("id = ?", id),
+		// TODO: Add eager loading based on requested fields
+		{{/* Add eager loaders on FK relationships */}}
+		{{- range .Table.FKeys -}}
+		{{- $txt := txtsFromFKey $dot.Tables $dot.Table . -}}
+		qm.Load("{{$txt.Function.Name}}"),
+		{{- end -}}
+		{{/* Add eager loaders on all to one relationships */}}
+		{{- range .Table.ToOneRelationships -}}
+		{{- $txt := txtsFromOneToOne $dot.Tables $dot.Table . -}}
+		qm.Load("{{$txt.Function.Name}}"),
+		{{- end -}}
+		{{/* Add eager loaders on all to many relationships */}}
+		{{- range .Table.ToManyRelationships -}}
+		{{- $txt := txtsFromToMany $dot.Tables $dot.Table . -}}
+		qm.Load("{{$txt.Function.Name}}"),
+		{{- end -}}
+	}
+
+	m, err := dbmodel.{{$modelNamePlural}}(r.db, mods...).One()
 	if err != nil {
 		return result, errors.Wrapf(err, "{{$modelName}}ByID(%#v)", args)
 	} else if m == nil {
@@ -126,7 +146,7 @@ func (r *Resolver) Update{{$modelName}}ByID(ctx context.Context, args struct {
 	if err != nil {
 		return result, errors.Wrapf(err, "{{$modelName}}ByID(%#v)", args)
 	}
-	
+
 	{{- range $column := $pkColDefs -}}
 	{{- if eq $column.Type "int"}}
 	id := int(i)

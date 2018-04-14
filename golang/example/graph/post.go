@@ -200,7 +200,12 @@ func (r *Resolver) PostByID(ctx context.Context, args struct {
 	}
 	id := int(i)
 
-	m, err := dbmodel.FindPost(r.db, id)
+	mods := []qm.QueryMod{
+		qm.Where("id = ?", id),
+		// TODO: Add eager loading based on requested fields
+		qm.Load("Comments")}
+
+	m, err := dbmodel.Posts(r.db, mods...).One()
 	if err != nil {
 		return result, errors.Wrapf(err, "PostByID(%#v)", args)
 	} else if m == nil {
