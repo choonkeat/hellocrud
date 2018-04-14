@@ -71,6 +71,17 @@ func (o Comment) UpdatedAt() *graphql.Time {
 	return nil // null.Time
 }
 
+// Post pointed to by the foreign key
+func (o Comment) Post() *Post {
+	if o.model.R == nil || o.model.R.Post == nil {
+		return nil
+	}
+	return &Post{
+		model: *o.model.R.Post,
+		db:    o.db,
+	}
+}
+
 // createCommentInput is an object to back Comment mutation (create) input type
 type createCommentInput struct {
 	PostID int32   `json:"post_id"`
@@ -148,7 +159,12 @@ func (r *Resolver) AllComments(ctx context.Context, args struct {
 	Search   *searchCommentArgs
 }) (CommentsCollection, error) {
 	result := CommentsCollection{}
-	mods := []qm.QueryMod{qm.Limit(int(args.PageSize))}
+	mods := []qm.QueryMod{
+		qm.Limit(int(args.PageSize)),
+		// TODO: Add eager loading based on requested fields
+		qm.Load("Post"),
+	}
+
 	if args.Since != nil {
 		s := string(*args.Since)
 		i, err := strconv.ParseInt(s, 10, 64)

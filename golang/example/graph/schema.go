@@ -84,6 +84,7 @@ type Comment {
 		notes: String
 		createdAt: Time
 		updatedAt: Time
+		post: Post
 }
 
 type CommentsCollection {
@@ -125,6 +126,7 @@ type Post {
 		notes: String
 		createdAt: Time
 		updatedAt: Time
+		comments: CommentsCollection
 }
 
 type PostsCollection {
