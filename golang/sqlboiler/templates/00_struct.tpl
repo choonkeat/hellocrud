@@ -1,3 +1,4 @@
+{{- $dot := . -}}
 {{- $tableNameSingular := .Table.Name | singular -}}
 {{- $modelName := $tableNameSingular | titleCase -}}
 {{- $modelNameCamel := $tableNameSingular | camelCase -}}
@@ -143,3 +144,51 @@ func (o {{$modelName}}) {{titleCase $column.Name}}() string {
 }
 {{- end -}}
 {{- end }}
+
+{{/* Add resolvers to FK relationships */}}
+{{range .Table.FKeys -}}
+{{- $txt := txtsFromFKey $dot.Tables $dot.Table . -}}
+// {{$txt.ForeignTable.NameGo}} pointed to by the foreign key
+func (o {{$modelName}}) {{$txt.ForeignTable.NameGo}}() *{{$txt.ForeignTable.NameGo}} {
+  if o.model.R == nil || o.model.R.{{$txt.Function.Name}} == nil {
+    return nil
+  }
+  return &{{$txt.ForeignTable.NameGo}}{
+		model: *o.model.R.{{$txt.Function.Name}},
+		db:    o.db,
+	}
+}
+{{end -}}
+
+{{/* Add resolvers to one relationships */}}
+{{range .Table.ToOneRelationships -}}
+{{- $txt := txtsFromOneToOne $dot.Tables $dot.Table . -}}
+// {{$txt.ForeignTable.NameGo}} pointed to by the foreign key
+func (o {{$modelName}}) {{$txt.ForeignTable.NameGo}}() *{{$txt.ForeignTable.NameGo}} {
+  if o.model.R == nil || o.model.R.{{$txt.Function.Name}} == nil {
+    return nil
+  }
+  return &{{$txt.ForeignTable.NameGo}}{
+		model: *o.model.R.{{$txt.Function.Name}},
+		db:    o.db,
+	}
+}
+{{end -}}
+
+{{/* Add resolvers to many relationships */}}
+{{range .Table.ToManyRelationships -}}
+{{- $txt := txtsFromToMany $dot.Tables $dot.Table . -}}
+{{- $toManyModelNamePlural := .ForeignTable | plural | titleCase -}}
+// {{$toManyModelNamePlural}} returns the list of {{$toManyModelNamePlural}} that has a foreign key pointing to {{$modelName}}
+func (o {{$modelName}}) {{$toManyModelNamePlural}}() *{{$toManyModelNamePlural}}Collection {
+  if o.model.R == nil || o.model.R.{{$txt.Function.Name}} == nil {
+    return nil
+  }
+  
+  result := &{{$toManyModelNamePlural}}Collection{}
+  for _, it := range o.model.R.{{$txt.Function.Name}} {
+		result.nodes = append(result.nodes, {{$txt.ForeignTable.NameGo}}{model: *it, db: o.db})
+	}
+  return result
+}
+{{end -}}

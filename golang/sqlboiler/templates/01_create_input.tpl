@@ -1,7 +1,7 @@
 {{- $tableNameSingular := .Table.Name | singular -}}
 {{- $modelName := $tableNameSingular | titleCase -}}
 {{- $modelNameCamel := $tableNameSingular | camelCase -}}
-{{- $pkColNames := .Table.PKey.Columns }}
+{{- $pkColNames := .Table.PKey.Columns -}}
 
 // create{{$modelName}}Input is an object to back {{$modelName}} mutation (create) input type
 type create{{$modelName}}Input struct {

@@ -1,7 +1,7 @@
 {{- $tableNameSingular := .Table.Name | singular -}}
 {{- $modelName := $tableNameSingular | titleCase -}}
 {{- $modelNameCamel := $tableNameSingular | camelCase -}}
-{{- $pkColNames := .Table.PKey.Columns }}
+{{- $pkColNames := .Table.PKey.Columns -}}
 
 // search{{$modelName}}Args is an object to back {{$modelName}} search arguments type
 type search{{$modelName}}Args struct {
