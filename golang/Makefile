@@ -13,6 +13,11 @@ generate: dbmigrate
 	sqlboiler --output example/graph   --pkgname graph   --schema app --basedir sqlboiler/graph $(DBTYPE)
 	# 3. clean up generated go code
 	goimports -w example/*.go example/graph/*.go example/dbmodel/*.go
+	# 4. generate react+apollo crud
+	sqlboiler --output ../js/src   --pkgname js   --schema app --basedir sqlboiler/js $(DBTYPE)
+	# 4a. clean up generated js code; sqlboiler only generates `.go`
+	# rm -f ../js/src/*js
+	go run cmd/sqlboiler2js/main.go ../js/src
 
 dbmigrate:
 	# https://github.com/mattes/migrate/blob/master/cli/README.md

@@ -18,7 +18,7 @@ services:
       POSTGRES_DB: hellocrud_development
     working_dir: /go/src/github.com/choonkeat/hellocrud/golang
     volumes:
-      - ./golang:/go/src/github.com/choonkeat/hellocrud/golang
+      - .:/go/src/github.com/choonkeat/hellocrud
     command: ["/bin/ash", "cmd/wait-for-postgres.sh", "make"]
   postgres:
     image: "postgres"
