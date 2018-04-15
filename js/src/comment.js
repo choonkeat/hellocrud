@@ -1,13 +1,19 @@
 import React from 'react'
-import { graphql, compose } from 'react-apollo'
+import { graphql } from 'react-apollo'
 import gql from 'graphql-tag'
 import { Form, Field } from 'react-final-form'
 import { Switch, Route } from 'react-router'
 import { Link } from 'react-router-dom'
 
 // TupleForm for editing or creating a tuple
-const TupleForm = ({ current, mutate, history, data, errors }) => {
-  let onSubmit = (form) => {
+export class TupleForm extends React.Component {
+  constructor (props) {
+    super(props)
+    this.state = { errors: [] }
+    this.onSubmit = this.onSubmit.bind(this)
+  }
+
+  onSubmit (form) {
     delete form.__typename
     for (var k in form) {
       if (form.hasOwnProperty(k) && k.endsWith('ID') && ('' + form[k]).match(/^[-]?\d+\.?\d*$/)) {
@@ -19,7 +25,7 @@ const TupleForm = ({ current, mutate, history, data, errors }) => {
         input: { ...form }
       }
     }
-    if (current) {
+    if (this.props.current && form.id) {
       let formId = form.id
       delete form.id
       mutateInput.variables = {
@@ -27,62 +33,71 @@ const TupleForm = ({ current, mutate, history, data, errors }) => {
         input: { ...form }
       }
     }
-    mutate(mutateInput).then(({ data }) => {
-      history.push('/comments')
-      data.refetch()
+
+    let setState = this.setState.bind(this)
+    this.props.mutate(mutateInput).then((...args) => {
+      if (this.props.allCommentsData && this.props.allCommentsData.refetch) this.props.allCommentsData.refetch()
+      this.props.history.push('/comments')
     }).catch((error) => {
-      console.log('there was an error sending the query', error)
+      setState({ errors: [error] })
     })
     return false
   }
 
-  return <div className='card-body'>
-    <Link to='/comments'>&larr; Comments</Link><h1 className='card-title'>Comment #{current ? current.rowId : 'New'}</h1>
-    <Form
-      onSubmit={onSubmit}
-      initialValues={current}
-      render={({ handleSubmit, reset, submitting, pristine, values }) => (
-        <form onSubmit={handleSubmit}>
-          {(errors || []).map(err => {
-            return <p>Error: {JSON.stringify(err)}</p>
-          })}
-          {current ? (<div>
-            <input type='hidden' name='rowId' value={current.rowId} />
-          </div>) : null}
-          <div className='form-group row'>
-            <label className='col-sm-2 col-form-label'>postID</label>
-            <Field className='form-control col-sm-10' name='postID' component='input' type='text' placeholder='post_id' />
-            <small className='form-text text-muted offset-sm-2'>tip: postID</small>
-          </div>
-          <div className='form-group row'>
-            <label className='col-sm-2 col-form-label'>author</label>
-            <Field className='form-control col-sm-10' name='author' component='input' type='text' placeholder='author' />
-            <small className='form-text text-muted offset-sm-2'>tip: author</small>
-          </div>
-          <div className='form-group row'>
-            <label className='col-sm-2 col-form-label'>body</label>
-            <Field className='form-control col-sm-10' name='body' component='input' type='text' placeholder='body' />
-            <small className='form-text text-muted offset-sm-2'>tip: body</small>
-          </div>
-          <div className='form-group row'>
-            <label className='col-sm-2 col-form-label'>notes</label>
-            <Field className='form-control col-sm-10' name='notes' component='input' type='text' placeholder='notes' />
-            <small className='form-text text-muted offset-sm-2'>tip: notes</small>
-          </div>
-          <div className='form-group row'>
-            <div className='offset-sm-2'>
-              <button className='btn btn-primary' type='submit' disabled={submitting || pristine}>Submit{submitting ? '...' : null}</button>
-              &nbsp;<Link to='/comments'>Cancel</Link>
+  render () {
+    let state = this.state
+    let current = this.props.current
+
+    return <div className='card-body'>
+      <Link to='/comments'>&larr; Comments</Link><h1 className='card-title'>{current && current.id ? 'Edit' : 'New'} Comment</h1>
+      <Form
+        onSubmit={this.onSubmit}
+        initialValues={current}
+        render={({ handleSubmit, reset, submitting, pristine, values }) => (
+          <form onSubmit={handleSubmit}>
+            {(state.errors || []).map((errObject, index) => {
+              return <div key={`error-{index}`} className='alert alert-danger'>
+                {errObject.message}
+              </div>
+            })}
+            {current && current.rowId ? (<div>
+              <input type='hidden' name='rowId' value={current.rowId} />
+            </div>) : null}
+            <div className='form-group row'>
+              <label className='col-sm-2 col-form-label'>postID</label>
+              <Field className='form-control col-sm-10' name='postID' component='input' type='text' placeholder='post_id' />
+              <small className='form-text text-muted offset-sm-2'>tip: postID</small>
             </div>
-          </div>
-        </form>
-      )}
-    />
-  </div>
+            <div className='form-group row'>
+              <label className='col-sm-2 col-form-label'>author</label>
+              <Field className='form-control col-sm-10' name='author' component='input' type='text' placeholder='author' />
+              <small className='form-text text-muted offset-sm-2'>tip: author</small>
+            </div>
+            <div className='form-group row'>
+              <label className='col-sm-2 col-form-label'>body</label>
+              <Field className='form-control col-sm-10' name='body' component='input' type='text' placeholder='body' />
+              <small className='form-text text-muted offset-sm-2'>tip: body</small>
+            </div>
+            <div className='form-group row'>
+              <label className='col-sm-2 col-form-label'>notes</label>
+              <Field className='form-control col-sm-10' name='notes' component='input' type='text' placeholder='notes' />
+              <small className='form-text text-muted offset-sm-2'>tip: notes</small>
+            </div>
+            <div className='form-group row'>
+              <div className='offset-sm-2'>
+                <button className='btn btn-primary' type='submit' disabled={submitting || pristine}>Submit{submitting ? '...' : null}</button>
+                &nbsp;<Link to='/comments'>Cancel</Link>
+              </div>
+            </div>
+          </form>
+        )}
+      />
+    </div>
+  }
 }
 
 // ShowTuple displays a tuple, be creative in your HTML
-const ShowTuple = ({ current }) => {
+export const ShowTuple = ({ current }) => {
   return <div className='card-body'>
     <Link to='/comments'>&larr; Comments </Link><h1 className='card-title'>Comment #{current.rowId}</h1>
     <table>
@@ -122,14 +137,27 @@ const ShowTuple = ({ current }) => {
 }
 
 // DeleteTuple is a button (or change it to something else)
-const DeleteTuple = ({ id, deleteCommentByID, data }) => {
+export const DeleteTuple = graphql(gql`
+  mutation deleteCommentByID($id: ID!) {
+    deleteCommentByID(id:$id) {
+      rowId
+      id
+      postID
+      author
+      body
+      notes
+      createdAt
+      updatedAt
+    }
+  }
+`, {name: 'deleteCommentByID'})(({ id, deleteCommentByID, allCommentsData }) => {
   let onClick = () => {
     deleteCommentByID({
       variables: {
         id: id
       }
-    }).then(({ data }) => {
-      data.refetch()
+    }).then((...args) => {
+      if (allCommentsData && allCommentsData.refetch) allCommentsData.refetch()
     }).catch((error) => {
       console.log('there was an error sending the query', JSON.stringify(error))
     })
@@ -141,9 +169,9 @@ const DeleteTuple = ({ id, deleteCommentByID, data }) => {
       Delete
     </button>
   </div>
-}
+})
 
-const ListTuples = (props) => {
+export const ListTuples = ({allCommentsData}) => {
   return <div className='card-body'>
     <Link to='/'>&larr; Home</Link><h1 className='card-title'>Comments</h1>
     <div className='float-right'>
@@ -164,7 +192,7 @@ const ListTuples = (props) => {
         </tr>
       </thead>
       <tbody>
-        {((props.data.allComments && props.data.allComments.nodes) || []).map(row => {
+        {((allCommentsData.allComments && allCommentsData.allComments.nodes) || []).map(row => {
           return <tr key={row.rowId}>
             <td><Link to={`/comments/${row.id}`}>{row.id}</Link></td>
             <td><Link to={`/comments/${row.id}`}>{row.postID}</Link></td>
@@ -174,7 +202,7 @@ const ListTuples = (props) => {
             <td><Link to={`/comments/${row.id}`}>{row.createdAt}</Link></td>
             <td><Link to={`/comments/${row.id}`}>{row.updatedAt}</Link></td>
             <td><Link to={`/comments/${row.id}/edit`}><button className='btn btn-secondary'>Edit</button></Link></td>
-            <td><DeleteTuple id={row.id} {...props} /></td>
+            <td><DeleteTuple id={row.id} allCommentsData={allCommentsData} /></td>
           </tr>
         })}
       </tbody>
@@ -184,10 +212,9 @@ const ListTuples = (props) => {
 
 // seems like `compose` cannot deal with 2 gql`query`?
 // so we're breaking it out
-const GetTuple = graphql(gql`
+export const GetTuple = graphql(gql`
   query comment($rowid: ID!){
     commentByID(id: $rowid) {
-      id
       rowId
       id
       postID
@@ -209,12 +236,78 @@ const GetTuple = graphql(gql`
   </div>
 })
 
-const Component = compose(
-  graphql(gql`
-    query {
-      allComments(pageSize: 30) {
+export const Create = graphql(gql`
+  mutation createComment($input: CreateCommentInput!) {
+    createComment(input: $input) {
+      rowId
+      id
+      postID
+      author
+      body
+      notes
+      createdAt
+      updatedAt
+    }
+  }
+`, {name: 'createComment'})(({current, history, allCommentsData, createComment}) => {
+  return <TupleForm current={current} history={history} allCommentsData={allCommentsData} mutate={createComment} />
+})
+
+export const Edit = graphql(gql`
+  mutation updateCommentByID($id: ID!, $input: UpdateCommentInput!) {
+    updateCommentByID(id: $id, input: $input) {
+      rowId
+      id
+      postID
+      author
+      body
+      notes
+      createdAt
+      updatedAt
+    }
+  }
+`, {name: 'updateCommentByID'})(({current, history, allCommentsData, updateCommentByID}) => {
+  return <TupleForm current={current} history={history} allCommentsData={allCommentsData} mutate={updateCommentByID} />
+})
+
+export const Crud = graphql(gql`
+  query allComments($search: SearchCommentArgs){
+    allComments(pageSize: 30, search: $search) {
+      nodes {
+        rowId
+        id
+        postID
+        author
+        body
+        notes
+        createdAt
+        updatedAt
+      }
+    }
+  }
+`, {name: 'allCommentsData'})(({search, history, allCommentsData}) => {
+  return <div>
+    <Switch>
+      <Route exact path='/comments' render={() => <ListTuples history={history} allCommentsData={allCommentsData} search={search} />} />
+      <Route exact path='/comments/new' render={() => <Create history={history} allCommentsData={allCommentsData} />} />
+      <Route path='/comments/:rowid/edit' render={({ match: { params } }) => {
+        return <GetTuple rowid={params.rowid}><Edit history={history} params={params} /></GetTuple>
+      }} />
+      <Route path='/comments/:rowid' render={({ match: { params } }) => {
+        return <GetTuple rowid={params.rowid}>
+          <ShowTuple params={params} />
+        </GetTuple>
+      }} />
+    </Switch>
+  </div>
+})
+
+const Component = {
+  Crud: Crud,
+  List: graphql(gql`
+    query allComments($search: SearchCommentArgs){
+      allComments(pageSize: 30, search: $search) {
         nodes {
-          id
           rowId
           id
           postID
@@ -226,69 +319,9 @@ const Component = compose(
         }
       }
     }
-  `, {name: 'data'}),
-  graphql(gql`
-    mutation deleteCommentByID($id: ID!) {
-      deleteCommentByID(id:$id) {
-        id
-        rowId
-        id
-        postID
-        author
-        body
-        notes
-        createdAt
-        updatedAt
-      }
-    }
-  `, {name: 'deleteCommentByID'}),
-  graphql(gql`
-    mutation createComment($input: CreateCommentInput!) {
-      createComment(input: $input) {
-        id
-        rowId
-        id
-        postID
-        author
-        body
-        notes
-        createdAt
-        updatedAt
-      }
-    }
-  `, {name: 'createComment'}),
-  graphql(gql`
-    mutation updateCommentByID($id: ID!, $input: UpdateCommentInput!) {
-      updateCommentByID(id: $id, input: $input) {
-        id
-        rowId
-        id
-        postID
-        author
-        body
-        notes
-        createdAt
-        updatedAt
-      }
-    }
-  `, {name: 'updateCommentByID'})
-)((props) => {
-  return <div>
-    <Switch>
-      <Route exact path='/comments' render={() => <ListTuples {...props} />} />
-      <Route exact path='/comments/new' render={() => <TupleForm {...props} mutate={props.createComment} />} />
-      <Route path='/comments/:rowid/edit' render={({ match: { params } }) => {
-        return <GetTuple rowid={params.rowid}>
-          <TupleForm {...props} params={params} mutate={props.updateCommentByID} />
-        </GetTuple>
-      }} />
-      <Route path='/comments/:rowid' render={({ match: { params } }) => {
-        return <GetTuple rowid={params.rowid}>
-          <ShowTuple {...props} params={params} />
-        </GetTuple>
-      }} />
-    </Switch>
-  </div>
-})
+  `, {name: 'allCommentsData'})(props => <ListTuples {...props} />),
+  Create: Create,
+  Edit: Edit
+}
 
 export default Component
