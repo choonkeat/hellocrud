@@ -21,7 +21,7 @@ func (i *Int64) UnmarshalGraphQL(input interface{}) error {
 	case int64:
 		*i = Int64(strconv.FormatInt(int64(input), 10))
 	default:
-		err = errors.New("wrong type")
+		err = errors.New("wrong type: expecting string format for Int64 types")
 	}
 	return err
 }
