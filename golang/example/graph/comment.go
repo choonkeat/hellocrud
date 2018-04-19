@@ -17,6 +17,29 @@ import (
 	"github.com/volatiletech/sqlboiler/queries/qm"
 )
 
+// SchemaTypeComment is the GrpahQL schema type for Comment
+var SchemaTypeComment = `
+# Comment is a resource type
+type Comment {
+	
+		# Convenient GUID for ReactJS component @key attribute
+		rowId: String!
+		id: ID!
+		postID: Int!
+		author: String!
+		body: String!
+		notes: String
+		createdAt: Time
+		updatedAt: Time
+		# post has a foreign key pointing to Comment
+		post: Post
+}
+
+type CommentsCollection {
+	nodes: [Comment!]!
+}
+`
+
 // Comment is an object to back GraphQL type
 type Comment struct {
 	model dbmodel.Comment
@@ -82,6 +105,29 @@ func (o Comment) Post() *Post {
 	}
 }
 
+// CommentsCollection is the struct representing a collection of GraphQL types
+type CommentsCollection struct {
+	nodes []Comment
+	// future meta data goes here, e.g. count
+}
+
+// Nodes returns the list of GraphQL types
+func (c CommentsCollection) Nodes(ctx context.Context) []Comment {
+	return c.nodes
+}
+
+// SchemaCreateCommentInput is the schema create input for Comment
+var SchemaCreateCommentInput = `
+# CreateCommentInput is a create input type for Comment resource
+input CreateCommentInput {
+	
+	  postID: Int!
+	  author: String!
+	  body: String!
+	  notes: String
+}
+`
+
 // createCommentInput is an object to back Comment mutation (create) input type
 type createCommentInput struct {
 	PostID int32   `json:"post_id"`
@@ -89,6 +135,17 @@ type createCommentInput struct {
 	Body   string  `json:"body"`
 	Notes  *string `json:"notes"`
 }
+
+// SchemaUpdateCommentInput is the schema update input for Comment
+var SchemaUpdateCommentInput = `
+input UpdateCommentInput {
+	
+	  postID: Int!
+	  author: String!
+	  body: String!
+	  notes: String
+}
+`
 
 // updateCommentInput is an object to back Comment mutation (update) input type
 type updateCommentInput struct {
@@ -141,22 +198,66 @@ func (s *searchCommentArgs) QueryMods() []qm.QueryMod {
 	return mods
 }
 
-// CommentsCollection is the struct representing a collection of GraphQL types
-type CommentsCollection struct {
-	nodes []Comment
-	// future meta data goes here, e.g. count
+// SchemaSearchCommentInput is the schema search input for Comment
+var SchemaSearchCommentInput = `
+# SearchCommentInput is a search input/arguments type for Comment resources
+input SearchCommentInput {
+	
+	  postID: Int
+	  author: String
+	  body: String
+	  notes: String
+}
+`
+
+// searchCommentInput is an object to back Comment search arguments input type
+type searchCommentInput struct {
+	PostID    *int32        `json:"post_id"`
+	Author    *string       `json:"author"`
+	Body      *string       `json:"body"`
+	Notes     *string       `json:"notes"`
+	CreatedAt *graphql.Time `json:"created_at"`
+	UpdatedAt *graphql.Time `json:"updated_at"`
 }
 
-// Nodes returns the list of GraphQL types
-func (c CommentsCollection) Nodes(ctx context.Context) []Comment {
-	return c.nodes
+// QueryMods returns a list of QueryMod based on the struct values
+func (s *searchCommentInput) QueryMods() []qm.QueryMod {
+	mods := []qm.QueryMod{}
+	// Get reflect value
+	v := reflect.ValueOf(s).Elem()
+	// Iterate struct fields
+	for i := 0; i < v.NumField(); i++ {
+		field := v.Type().Field(i) // StructField
+		value := v.Field(i)        // Value
+		if value.IsNil() || !value.IsValid() {
+			// Skip if field is nil
+			continue
+		}
+
+		// Get column name from tags
+		column, hasColumnName := field.Tag.Lookup("json")
+		// Skip if no DB definition
+		if !hasColumnName {
+			continue
+		}
+
+		operator := "="
+		val := value.Elem().Interface()
+		if dataType := field.Type.String(); (dataType == "string" || dataType == "*string") &&
+			val.(string) != "" {
+			operator = "LIKE"
+			val = fmt.Sprintf("%%%s%%", val)
+		}
+		mods = append(mods, qm.And(fmt.Sprintf("%s %s ?", column, operator), val))
+	}
+	return mods
 }
 
 // AllComments retrieves Comments based on the provided search parameters
 func (r *Resolver) AllComments(ctx context.Context, args struct {
 	Since    *graphql.ID
 	PageSize int32
-	Search   *searchCommentArgs
+	Search   *searchCommentInput
 }) (CommentsCollection, error) {
 	result := CommentsCollection{}
 	mods := []qm.QueryMod{

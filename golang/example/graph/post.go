@@ -17,6 +17,29 @@ import (
 	"github.com/volatiletech/sqlboiler/queries/qm"
 )
 
+// SchemaTypePost is the GrpahQL schema type for Post
+var SchemaTypePost = `
+# Post is a resource type
+type Post {
+	
+		# Convenient GUID for ReactJS component @key attribute
+		rowId: String!
+		id: ID!
+		title: String!
+		author: String!
+		body: String!
+		notes: String
+		createdAt: Time
+		updatedAt: Time
+		# comments has a many-to-one relationship with Post
+		comments: CommentsCollection
+}
+
+type PostsCollection {
+	nodes: [Post!]!
+}
+`
+
 // Post is an object to back GraphQL type
 type Post struct {
 	model dbmodel.Post
@@ -84,6 +107,29 @@ func (o Post) Comments() *CommentsCollection {
 	return result
 }
 
+// PostsCollection is the struct representing a collection of GraphQL types
+type PostsCollection struct {
+	nodes []Post
+	// future meta data goes here, e.g. count
+}
+
+// Nodes returns the list of GraphQL types
+func (c PostsCollection) Nodes(ctx context.Context) []Post {
+	return c.nodes
+}
+
+// SchemaCreatePostInput is the schema create input for Post
+var SchemaCreatePostInput = `
+# CreatePostInput is a create input type for Post resource
+input CreatePostInput {
+	
+	  title: String!
+	  author: String!
+	  body: String!
+	  notes: String
+}
+`
+
 // createPostInput is an object to back Post mutation (create) input type
 type createPostInput struct {
 	Title  string  `json:"title"`
@@ -91,6 +137,17 @@ type createPostInput struct {
 	Body   string  `json:"body"`
 	Notes  *string `json:"notes"`
 }
+
+// SchemaUpdatePostInput is the schema update input for Post
+var SchemaUpdatePostInput = `
+input UpdatePostInput {
+	
+	  title: String!
+	  author: String!
+	  body: String!
+	  notes: String
+}
+`
 
 // updatePostInput is an object to back Post mutation (update) input type
 type updatePostInput struct {
@@ -143,22 +200,66 @@ func (s *searchPostArgs) QueryMods() []qm.QueryMod {
 	return mods
 }
 
-// PostsCollection is the struct representing a collection of GraphQL types
-type PostsCollection struct {
-	nodes []Post
-	// future meta data goes here, e.g. count
+// SchemaSearchPostInput is the schema search input for Post
+var SchemaSearchPostInput = `
+# SearchPostInput is a search input/arguments type for Post resources
+input SearchPostInput {
+	
+	  title: String
+	  author: String
+	  body: String
+	  notes: String
+}
+`
+
+// searchPostInput is an object to back Post search arguments input type
+type searchPostInput struct {
+	Title     *string       `json:"title"`
+	Author    *string       `json:"author"`
+	Body      *string       `json:"body"`
+	Notes     *string       `json:"notes"`
+	CreatedAt *graphql.Time `json:"created_at"`
+	UpdatedAt *graphql.Time `json:"updated_at"`
 }
 
-// Nodes returns the list of GraphQL types
-func (c PostsCollection) Nodes(ctx context.Context) []Post {
-	return c.nodes
+// QueryMods returns a list of QueryMod based on the struct values
+func (s *searchPostInput) QueryMods() []qm.QueryMod {
+	mods := []qm.QueryMod{}
+	// Get reflect value
+	v := reflect.ValueOf(s).Elem()
+	// Iterate struct fields
+	for i := 0; i < v.NumField(); i++ {
+		field := v.Type().Field(i) // StructField
+		value := v.Field(i)        // Value
+		if value.IsNil() || !value.IsValid() {
+			// Skip if field is nil
+			continue
+		}
+
+		// Get column name from tags
+		column, hasColumnName := field.Tag.Lookup("json")
+		// Skip if no DB definition
+		if !hasColumnName {
+			continue
+		}
+
+		operator := "="
+		val := value.Elem().Interface()
+		if dataType := field.Type.String(); (dataType == "string" || dataType == "*string") &&
+			val.(string) != "" {
+			operator = "LIKE"
+			val = fmt.Sprintf("%%%s%%", val)
+		}
+		mods = append(mods, qm.And(fmt.Sprintf("%s %s ?", column, operator), val))
+	}
+	return mods
 }
 
 // AllPosts retrieves Posts based on the provided search parameters
 func (r *Resolver) AllPosts(ctx context.Context, args struct {
 	Since    *graphql.ID
 	PageSize int32
-	Search   *searchPostArgs
+	Search   *searchPostInput
 }) (PostsCollection, error) {
 	result := PostsCollection{}
 	mods := []qm.QueryMod{

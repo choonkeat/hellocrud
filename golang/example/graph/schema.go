@@ -3,10 +3,17 @@
 
 package graph
 
-import graphql "github.com/graph-gophers/graphql-go"
+import (
+	"strings"
+
+	graphql "github.com/graph-gophers/graphql-go"
+)
 
 // Schema is the GraphQL schema
-var Schema = `
+var Schema string
+
+// schemaRoot is the GraphQL root schema containing query and mutation resolvers
+var schemaRoot = `
 scalar Time
 scalar Int64
 
@@ -21,7 +28,7 @@ type Query {
   allComments(
     since: ID
     pageSize: Int!
-    search: SearchCommentArgs
+    search: SearchCommentInput
   ): CommentsCollection!
 
   commentByID(
@@ -32,7 +39,7 @@ type Query {
   allPosts(
     since: ID
     pageSize: Int!
-    search: SearchPostArgs
+    search: SearchPostInput
   ): PostsCollection!
 
   postByID(
@@ -72,92 +79,22 @@ type Mutation {
   ): Post!
 
 }
-
-type Comment {
-	
-		# Convenient GUID for react component @key attribute
-		rowId: String!
-		id: ID!
-		postID: Int!
-		author: String!
-		body: String!
-		notes: String
-		createdAt: Time
-		updatedAt: Time
-		post: Post
-}
-
-type CommentsCollection {
-	nodes: [Comment!]!
-}
-
-input CreateCommentInput {
-	
-	  postID: Int!
-	  author: String!
-	  body: String!
-	  notes: String
-}
-
-input UpdateCommentInput {
-	
-	  postID: Int!
-	  author: String!
-	  body: String!
-	  notes: String
-}
-
-input SearchCommentArgs {
-	
-	  postID: Int
-	  author: String
-	  body: String
-	  notes: String
-}
-
-type Post {
-	
-		# Convenient GUID for react component @key attribute
-		rowId: String!
-		id: ID!
-		title: String!
-		author: String!
-		body: String!
-		notes: String
-		createdAt: Time
-		updatedAt: Time
-		comments: CommentsCollection
-}
-
-type PostsCollection {
-	nodes: [Post!]!
-}
-
-input CreatePostInput {
-	
-	  title: String!
-	  author: String!
-	  body: String!
-	  notes: String
-}
-
-input UpdatePostInput {
-	
-	  title: String!
-	  author: String!
-	  body: String!
-	  notes: String
-}
-
-input SearchPostArgs {
-	
-	  title: String
-	  author: String
-	  body: String
-	  notes: String
-}
-
-
 `
 
-var _ = graphql.MustParseSchema(Schema, &Resolver{})
+func init() {
+	strs := []string{
+		schemaRoot,
+		SchemaTypeComment,
+		SchemaCreateCommentInput,
+		SchemaUpdateCommentInput,
+		SchemaSearchCommentInput,
+		SchemaTypePost,
+		SchemaCreatePostInput,
+		SchemaUpdatePostInput,
+		SchemaSearchPostInput,
+	}
+	Schema = strings.Join(strs, "\n")
+
+	// Sanity check generated schema
+	graphql.MustParseSchema(Schema, &Resolver{})
+}
