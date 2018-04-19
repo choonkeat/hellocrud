@@ -5,22 +5,11 @@
 {{- $modelNameCamel := $tableNameSingular | camelCase}}
 {{- $pkColDefs := sqlColDefinitions .Table.Columns .Table.PKey.Columns}}
 
-// {{$modelNamePlural}}Collection is the struct representing a collection of GraphQL types
-type {{$modelNamePlural}}Collection struct {
-	nodes []{{$modelName}}
-	// future meta data goes here, e.g. count
-}
-
-// Nodes returns the list of GraphQL types
-func (c {{$modelNamePlural}}Collection) Nodes(ctx context.Context) []{{$modelName}} {
-	return c.nodes
-}
-
 // All{{$modelNamePlural}} retrieves {{$modelNamePlural}} based on the provided search parameters
 func (r *Resolver) All{{$modelNamePlural}}(ctx context.Context, args struct {
 	Since    *graphql.ID
 	PageSize int32
-	Search *search{{$modelName}}Args
+	Search *search{{$modelName}}Input
 }) ({{$modelNamePlural}}Collection, error) {
 	result := {{$modelNamePlural}}Collection{}
 	mods := []qm.QueryMod{
