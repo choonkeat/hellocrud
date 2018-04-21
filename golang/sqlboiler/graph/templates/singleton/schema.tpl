@@ -34,7 +34,7 @@ type Mutation {
 {{range $table := .Tables}}
 {{- $tableNameSingular := .Name | singular -}}
 {{- $modelName := $tableNameSingular | titleCase -}}
-{{- $mosdelNamePlural := $table.Name | plural | titleCase -}}
+{{- $modelNamePlural := $table.Name | plural | titleCase -}}
 {{- $modelNameCamel := $tableNameSingular | camelCase}}
 
   create{{$modelName}}(
