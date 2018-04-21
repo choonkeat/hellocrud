@@ -9,13 +9,13 @@ generate: dbmigrate
 	go run cmd/url2toml/main.go -url "$(DATABASE_URL)" > sqlboiler.toml
 	# 2. generate db orm
 	sqlboiler --output example/dbmodel --pkgname dbmodel --schema app $(DBTYPE)
-	# 2. generate graphql types and resolvers
+	# 3. generate graphql types and resolvers
 	sqlboiler --output example/graph   --pkgname graph   --schema app --basedir sqlboiler/graph $(DBTYPE)
-	# 3. clean up generated go code
+	# 4. clean up generated go code
 	goimports -w example/*.go example/graph/*.go example/dbmodel/*.go
-	# 4. generate react+apollo crud
+	# 5. generate react+apollo crud
 	sqlboiler --output ../js/src   --pkgname js   --schema app --basedir sqlboiler/js $(DBTYPE)
-	# 4a. clean up generated js code; sqlboiler only generates `.go`
+	# 5a. clean up generated js code; sqlboiler only generates `.go`
 	# rm -f ../js/src/*js
 	go run cmd/sqlboiler2js/main.go ../js/src
 
