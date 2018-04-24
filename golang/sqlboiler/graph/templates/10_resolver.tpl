@@ -8,12 +8,17 @@
 // All{{$modelNamePlural}} retrieves {{$modelNamePlural}} based on the provided search parameters
 func (r *Resolver) All{{$modelNamePlural}}(ctx context.Context, args struct {
 	Since    *graphql.ID
-	PageSize int32
+	PageSize *int32
 	Search *search{{$modelName}}Input
 }) ({{$modelNamePlural}}Collection, error) {
 	result := {{$modelNamePlural}}Collection{}
+
+	pageSize := 25 // Default page size
+	if args.PageSize != nil {
+		pageSize = int(*args.PageSize)
+	}
 	mods := []qm.QueryMod{
-		qm.Limit(int(args.PageSize)),
+		qm.Limit(pageSize),
 		// TODO: Add eager loading based on requested fields
 		{{/* Add eager loaders on FK relationships */}}
 		{{- range .Table.FKeys -}}

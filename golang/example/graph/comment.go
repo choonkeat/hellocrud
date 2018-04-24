@@ -17,7 +17,7 @@ import (
 	"github.com/volatiletech/sqlboiler/queries/qm"
 )
 
-// SchemaTypeComment is the GrpahQL schema type for Comment
+// SchemaTypeComment is the GraphQL schema type for Comment
 var SchemaTypeComment = `
 # Comment is a resource type
 type Comment {
@@ -39,6 +39,21 @@ type CommentsCollection {
 	nodes: [Comment!]!
 }
 `
+
+// NewComment returns a new Comment instance
+func NewComment(db boil.Executor, model dbmodel.Comment) Comment {
+	return Comment{
+		model: model,
+		db:    db,
+	}
+}
+
+// NewCommentsCollection returns a new CommentsCollection instance
+func NewCommentsCollection(nodes []Comment) CommentsCollection {
+	return CommentsCollection{
+		nodes: nodes,
+	}
+}
 
 // Comment is an object to back GraphQL type
 type Comment struct {
@@ -256,12 +271,17 @@ func (s *searchCommentInput) QueryMods() []qm.QueryMod {
 // AllComments retrieves Comments based on the provided search parameters
 func (r *Resolver) AllComments(ctx context.Context, args struct {
 	Since    *graphql.ID
-	PageSize int32
+	PageSize *int32
 	Search   *searchCommentInput
 }) (CommentsCollection, error) {
 	result := CommentsCollection{}
+
+	pageSize := 25 // Default page size
+	if args.PageSize != nil {
+		pageSize = int(*args.PageSize)
+	}
 	mods := []qm.QueryMod{
-		qm.Limit(int(args.PageSize)),
+		qm.Limit(pageSize),
 		// TODO: Add eager loading based on requested fields
 		qm.Load("Post"),
 	}

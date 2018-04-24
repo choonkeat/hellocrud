@@ -17,7 +17,7 @@ import (
 	"github.com/volatiletech/sqlboiler/queries/qm"
 )
 
-// SchemaTypePost is the GrpahQL schema type for Post
+// SchemaTypePost is the GraphQL schema type for Post
 var SchemaTypePost = `
 # Post is a resource type
 type Post {
@@ -39,6 +39,21 @@ type PostsCollection {
 	nodes: [Post!]!
 }
 `
+
+// NewPost returns a new Post instance
+func NewPost(db boil.Executor, model dbmodel.Post) Post {
+	return Post{
+		model: model,
+		db:    db,
+	}
+}
+
+// NewPostsCollection returns a new PostsCollection instance
+func NewPostsCollection(nodes []Post) PostsCollection {
+	return PostsCollection{
+		nodes: nodes,
+	}
+}
 
 // Post is an object to back GraphQL type
 type Post struct {
@@ -258,12 +273,17 @@ func (s *searchPostInput) QueryMods() []qm.QueryMod {
 // AllPosts retrieves Posts based on the provided search parameters
 func (r *Resolver) AllPosts(ctx context.Context, args struct {
 	Since    *graphql.ID
-	PageSize int32
+	PageSize *int32
 	Search   *searchPostInput
 }) (PostsCollection, error) {
 	result := PostsCollection{}
+
+	pageSize := 25 // Default page size
+	if args.PageSize != nil {
+		pageSize = int(*args.PageSize)
+	}
 	mods := []qm.QueryMod{
-		qm.Limit(int(args.PageSize)),
+		qm.Limit(pageSize),
 		// TODO: Add eager loading based on requested fields
 		qm.Load("Comments"),
 	}
