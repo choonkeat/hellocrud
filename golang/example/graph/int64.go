@@ -35,3 +35,8 @@ func (i *Int64) UnmarshalGraphQL(input interface{}) error {
 func (i Int64) MarshalJSON() ([]byte, error) {
 	return []byte(i), nil
 }
+
+// ToGo converts the custom scalar type to Go type
+func (i *Int64) ToGo() (int64, error) {
+	return strconv.ParseInt(string(*i), 10, 64)
+}
