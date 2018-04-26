@@ -241,34 +241,32 @@ type searchPostInput struct {
 
 // AllPosts retrieves Posts based on the provided search parameters
 func (r *Resolver) AllPosts(ctx context.Context, args struct {
-	Since    *graphql.ID
-	PageSize *int
-	Search   *searchPostInput
+	PageNumber *int32
+	PageSize   *int32
+	Search     *searchPostInput
 }) (PostsCollection, error) {
 	result := PostsCollection{}
 
 	mods := []qm.QueryMod{
-		QueryModPageSize(args.PageSize),
-
 		// TODO: Add eager loading based on requested fields
 		qm.Load("Comments"),
 	}
 
-	offset, err := QueryModOffset(args.Since)
-	if err != nil {
-		return result, err
-	}
-	if offset != nil {
-		mods = append(mods, offset)
-	}
+	// Pagination
+	mods = append(mods, QueryModPagination(args.PageNumber, args.PageSize)...)
 
+	// Search input
 	if args.Search != nil {
 		mods = append(mods, QueryModsSearch(args.Search)...)
 	}
+
+	// Retrieve dbmodel
 	slice, err := dbmodel.Posts(r.db, mods...).All()
 	if err != nil {
 		return result, errors.Wrapf(err, "allPosts(%#v)", args)
 	}
+
+	// Convert to GraphQL type resolver
 	result = NewPostsCollection(r.db, slice)
 
 	return result, nil

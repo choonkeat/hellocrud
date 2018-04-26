@@ -19,7 +19,7 @@ type Query {
 {{- $modelNameCamel := $tableNameSingular | camelCase}}
 
   all{{$modelNamePlural}}(
-    since: ID
+    pageNumber: Int
     pageSize: Int
     search: Search{{$modelName}}Input
   ): {{$modelNamePlural}}Collection!

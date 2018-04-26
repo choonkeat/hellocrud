@@ -7,15 +7,13 @@
 
 // All{{$modelNamePlural}} retrieves {{$modelNamePlural}} based on the provided search parameters
 func (r *Resolver) All{{$modelNamePlural}}(ctx context.Context, args struct {
-	Since    *graphql.ID
-	PageSize *int
+	PageNumber *int32
+	PageSize *int32
 	Search *search{{$modelName}}Input
 }) ({{$modelNamePlural}}Collection, error) {
 	result := {{$modelNamePlural}}Collection{}
 
 	mods := []qm.QueryMod{
-		QueryModPageSize(args.PageSize),
-		
 		// TODO: Add eager loading based on requested fields
 		{{/* Add eager loaders on FK relationships */}}
 		{{- range .Table.FKeys -}}
@@ -33,22 +31,22 @@ func (r *Resolver) All{{$modelNamePlural}}(ctx context.Context, args struct {
 		qm.Load("{{$txt.Function.Name}}"),
 		{{- end }}
 	}
-	
-	offset, err := QueryModOffset(args.Since)
-	if err != nil {
-		return result, err
-	}
-	if offset != nil {
-		mods = append(mods, offset)
-	}
-	
+
+	// Pagination
+	mods = append(mods, QueryModPagination(args.PageNumber, args.PageSize)...)
+
+	// Search input
 	if args.Search != nil {
 		mods = append(mods, QueryModsSearch(args.Search)...)
 	}
+
+	// Retrieve dbmodel
 	slice, err := dbmodel.{{$modelNamePlural}}(r.db, mods...).All()
 	if err != nil {
 		return result, errors.Wrapf(err, "all{{$modelNamePlural}}(%#v)", args)
 	}
+
+	// Convert to GraphQL type resolver
 	result = New{{$modelNamePlural}}Collection(r.db, slice)
 
 	return result, nil

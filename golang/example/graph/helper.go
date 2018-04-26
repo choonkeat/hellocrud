@@ -6,9 +6,7 @@ package graph
 import (
 	"fmt"
 	"reflect"
-	"strconv"
 
-	graphql "github.com/graph-gophers/graphql-go"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 )
 
@@ -17,27 +15,21 @@ const (
 	defaultPageSize = 25
 )
 
-// QueryModPageSize returns an SQLBoiler QueryMod limit based on the argument
-func QueryModPageSize(pageSize *int) qm.QueryMod {
-	l := defaultPageSize // Default page size
+// QueryModPagination returns SQLBoiler QueryMods for pagination
+func QueryModPagination(pageNum, pageSize *int32) []qm.QueryMod {
+	// Page size
+	limit := defaultPageSize // Default page size
 	if pageSize != nil {
-		l = *pageSize
-	}
-	return qm.Limit(l)
-}
-
-// QueryModOffset returns an SQLBoiler QueryMod offset based on the argument
-func QueryModOffset(offset *graphql.ID) (qm.QueryMod, error) {
-	if offset == nil {
-		return qm.Offset(0), nil
+		limit = int(*pageSize)
 	}
 
-	s := string(*offset)
-	i, err := strconv.ParseInt(s, 10, 64)
-	if err != nil {
-		return nil, err
+	// Page number
+	if pageNum == nil || pageSize == nil {
+		return []qm.QueryMod{qm.Limit(limit)}
 	}
-	return qm.Offset(int(i)), nil
+
+	offset := (int(*pageNum) * int(*pageSize))
+	return []qm.QueryMod{qm.Limit(limit), qm.Offset(offset)}
 }
 
 // QueryModsSearch returns a list of QueryMod based on the struct values

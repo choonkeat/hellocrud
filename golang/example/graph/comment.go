@@ -239,34 +239,32 @@ type searchCommentInput struct {
 
 // AllComments retrieves Comments based on the provided search parameters
 func (r *Resolver) AllComments(ctx context.Context, args struct {
-	Since    *graphql.ID
-	PageSize *int
-	Search   *searchCommentInput
+	PageNumber *int32
+	PageSize   *int32
+	Search     *searchCommentInput
 }) (CommentsCollection, error) {
 	result := CommentsCollection{}
 
 	mods := []qm.QueryMod{
-		QueryModPageSize(args.PageSize),
-
 		// TODO: Add eager loading based on requested fields
 		qm.Load("Post"),
 	}
 
-	offset, err := QueryModOffset(args.Since)
-	if err != nil {
-		return result, err
-	}
-	if offset != nil {
-		mods = append(mods, offset)
-	}
+	// Pagination
+	mods = append(mods, QueryModPagination(args.PageNumber, args.PageSize)...)
 
+	// Search input
 	if args.Search != nil {
 		mods = append(mods, QueryModsSearch(args.Search)...)
 	}
+
+	// Retrieve dbmodel
 	slice, err := dbmodel.Comments(r.db, mods...).All()
 	if err != nil {
 		return result, errors.Wrapf(err, "allComments(%#v)", args)
 	}
+
+	// Convert to GraphQL type resolver
 	result = NewCommentsCollection(r.db, slice)
 
 	return result, nil

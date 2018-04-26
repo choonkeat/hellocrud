@@ -26,7 +26,7 @@ type Query {
 
 
   allComments(
-    since: ID
+    pageNumber: Int
     pageSize: Int
     search: SearchCommentInput
   ): CommentsCollection!
@@ -37,7 +37,7 @@ type Query {
 
 
   allPosts(
-    since: ID
+    pageNumber: Int
     pageSize: Int
     search: SearchPostInput
   ): PostsCollection!
