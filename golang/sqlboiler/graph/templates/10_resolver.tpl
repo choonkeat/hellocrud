@@ -5,11 +5,11 @@
 {{- $modelNameCamel := $tableNameSingular | camelCase}}
 {{- $pkColDefs := sqlColDefinitions .Table.Columns .Table.PKey.Columns}}
 
-// All{{$modelNamePlural}} retrieves {{$modelNamePlural}} based on the provided search parameters
-func (r *Resolver) All{{$modelNamePlural}}(ctx context.Context, args struct {
+// Search{{$modelNamePlural}} retrieves {{$modelNamePlural}} based on the provided search parameters
+func (r *Resolver) Search{{$modelNamePlural}}(ctx context.Context, args struct {
 	PageNumber *int32
 	PageSize *int32
-	Search *search{{$modelName}}Input
+	Input *search{{$modelName}}Input
 }) ({{$modelNamePlural}}Collection, error) {
 	result := {{$modelNamePlural}}Collection{}
 
@@ -36,14 +36,14 @@ func (r *Resolver) All{{$modelNamePlural}}(ctx context.Context, args struct {
 	mods = append(mods, QueryModPagination(args.PageNumber, args.PageSize)...)
 
 	// Search input
-	if args.Search != nil {
-		mods = append(mods, QueryModsSearch(args.Search)...)
+	if args.Input != nil {
+		mods = append(mods, QueryModsSearch(args.Input)...)
 	}
 
-	// Retrieve dbmodel
+	// Retrieve model/s based on search criteria
 	slice, err := dbmodel.{{$modelNamePlural}}(r.db, mods...).All()
 	if err != nil {
-		return result, errors.Wrapf(err, "all{{$modelNamePlural}}(%#v)", args)
+		return result, errors.Wrapf(err, "search{{$modelNamePlural}}(%#v)", args)
 	}
 
 	// Convert to GraphQL type resolver

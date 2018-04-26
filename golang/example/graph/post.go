@@ -239,11 +239,11 @@ type searchPostInput struct {
 	UpdatedAt *graphql.Time `json:"updated_at"`
 }
 
-// AllPosts retrieves Posts based on the provided search parameters
-func (r *Resolver) AllPosts(ctx context.Context, args struct {
+// SearchPosts retrieves Posts based on the provided search parameters
+func (r *Resolver) SearchPosts(ctx context.Context, args struct {
 	PageNumber *int32
 	PageSize   *int32
-	Search     *searchPostInput
+	Input      *searchPostInput
 }) (PostsCollection, error) {
 	result := PostsCollection{}
 
@@ -256,14 +256,14 @@ func (r *Resolver) AllPosts(ctx context.Context, args struct {
 	mods = append(mods, QueryModPagination(args.PageNumber, args.PageSize)...)
 
 	// Search input
-	if args.Search != nil {
-		mods = append(mods, QueryModsSearch(args.Search)...)
+	if args.Input != nil {
+		mods = append(mods, QueryModsSearch(args.Input)...)
 	}
 
-	// Retrieve dbmodel
+	// Retrieve model/s based on search criteria
 	slice, err := dbmodel.Posts(r.db, mods...).All()
 	if err != nil {
-		return result, errors.Wrapf(err, "allPosts(%#v)", args)
+		return result, errors.Wrapf(err, "searchPosts(%#v)", args)
 	}
 
 	// Convert to GraphQL type resolver

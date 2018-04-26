@@ -18,10 +18,10 @@ type Query {
 {{- $modelNamePlural := $table.Name | plural | titleCase -}}
 {{- $modelNameCamel := $tableNameSingular | camelCase}}
 
-  all{{$modelNamePlural}}(
+  search{{$modelNamePlural}}(
     pageNumber: Int
     pageSize: Int
-    search: Search{{$modelName}}Input
+    input: Search{{$modelName}}Input
   ): {{$modelNamePlural}}Collection!
 
   {{$modelNameCamel}}ByID(

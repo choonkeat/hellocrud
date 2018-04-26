@@ -25,10 +25,10 @@ schema {
 type Query {
 
 
-  allComments(
+  searchComments(
     pageNumber: Int
     pageSize: Int
-    search: SearchCommentInput
+    input: SearchCommentInput
   ): CommentsCollection!
 
   commentByID(
@@ -36,10 +36,10 @@ type Query {
   ): Comment!
 
 
-  allPosts(
+  searchPosts(
     pageNumber: Int
     pageSize: Int
-    search: SearchPostInput
+    input: SearchPostInput
   ): PostsCollection!
 
   postByID(

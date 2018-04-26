@@ -237,11 +237,11 @@ type searchCommentInput struct {
 	UpdatedAt *graphql.Time `json:"updated_at"`
 }
 
-// AllComments retrieves Comments based on the provided search parameters
-func (r *Resolver) AllComments(ctx context.Context, args struct {
+// SearchComments retrieves Comments based on the provided search parameters
+func (r *Resolver) SearchComments(ctx context.Context, args struct {
 	PageNumber *int32
 	PageSize   *int32
-	Search     *searchCommentInput
+	Input      *searchCommentInput
 }) (CommentsCollection, error) {
 	result := CommentsCollection{}
 
@@ -254,14 +254,14 @@ func (r *Resolver) AllComments(ctx context.Context, args struct {
 	mods = append(mods, QueryModPagination(args.PageNumber, args.PageSize)...)
 
 	// Search input
-	if args.Search != nil {
-		mods = append(mods, QueryModsSearch(args.Search)...)
+	if args.Input != nil {
+		mods = append(mods, QueryModsSearch(args.Input)...)
 	}
 
-	// Retrieve dbmodel
+	// Retrieve model/s based on search criteria
 	slice, err := dbmodel.Comments(r.db, mods...).All()
 	if err != nil {
-		return result, errors.Wrapf(err, "allComments(%#v)", args)
+		return result, errors.Wrapf(err, "searchComments(%#v)", args)
 	}
 
 	// Convert to GraphQL type resolver
