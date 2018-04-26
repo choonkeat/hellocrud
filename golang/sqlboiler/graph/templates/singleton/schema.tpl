@@ -20,7 +20,7 @@ type Query {
 
   all{{$modelNamePlural}}(
     since: ID
-    pageSize: Int!
+    pageSize: Int
     search: Search{{$modelName}}Input
   ): {{$modelNamePlural}}Collection!
 

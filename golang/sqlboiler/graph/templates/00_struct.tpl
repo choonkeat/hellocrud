@@ -81,6 +81,21 @@ type {{$modelNamePlural}}Collection {
 }
 `
 
+// New{{$modelName}} returns a new {{$modelName}} instance
+func New{{$modelName}}(db boil.Executor, model dbmodel.{{$modelName}}) {{$modelName}} {
+	return {{$modelName}}{
+		model: model, 
+		db: db,
+	}
+}
+
+// New{{$modelNamePlural}}Collection returns a new {{$modelNamePlural}}Collection instance
+func New{{$modelNamePlural}}Collection(nodes []{{$modelName}}) {{$modelNamePlural}}Collection {
+	return {{$modelNamePlural}}Collection{
+		nodes: nodes,
+	}
+}
+
 // {{$modelName}} is an object to back GraphQL type
 type {{$modelName}} struct {
   model dbmodel.{{$modelName}}
