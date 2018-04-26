@@ -276,7 +276,7 @@ func (r *Resolver) AllComments(ctx context.Context, args struct {
 }) (CommentsCollection, error) {
 	result := CommentsCollection{}
 
-	pageSize := 25 // Default page size
+	pageSize := defaultPageSize // Default page size
 	if args.PageSize != nil {
 		pageSize = int(*args.PageSize)
 	}

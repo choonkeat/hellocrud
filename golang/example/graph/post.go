@@ -278,7 +278,7 @@ func (r *Resolver) AllPosts(ctx context.Context, args struct {
 }) (PostsCollection, error) {
 	result := PostsCollection{}
 
-	pageSize := 25 // Default page size
+	pageSize := defaultPageSize // Default page size
 	if args.PageSize != nil {
 		pageSize = int(*args.PageSize)
 	}

@@ -13,7 +13,7 @@ func (r *Resolver) All{{$modelNamePlural}}(ctx context.Context, args struct {
 }) ({{$modelNamePlural}}Collection, error) {
 	result := {{$modelNamePlural}}Collection{}
 
-	pageSize := 25 // Default page size
+	pageSize := defaultPageSize // Default page size
 	if args.PageSize != nil {
 		pageSize = int(*args.PageSize)
 	}
