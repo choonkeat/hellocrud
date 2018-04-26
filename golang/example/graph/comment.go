@@ -271,17 +271,14 @@ func (s *searchCommentInput) QueryMods() []qm.QueryMod {
 // AllComments retrieves Comments based on the provided search parameters
 func (r *Resolver) AllComments(ctx context.Context, args struct {
 	Since    *graphql.ID
-	PageSize *int32
+	PageSize *int
 	Search   *searchCommentInput
 }) (CommentsCollection, error) {
 	result := CommentsCollection{}
 
-	pageSize := defaultPageSize // Default page size
-	if args.PageSize != nil {
-		pageSize = int(*args.PageSize)
-	}
 	mods := []qm.QueryMod{
-		qm.Limit(pageSize),
+		queryModPageSize(args.PageSize),
+
 		// TODO: Add eager loading based on requested fields
 		qm.Load("Post"),
 	}
