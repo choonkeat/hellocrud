@@ -235,39 +235,6 @@ type searchCommentInput struct {
 	UpdatedAt *graphql.Time `json:"updated_at"`
 }
 
-// QueryMods returns a list of QueryMod based on the struct values
-func (s *searchCommentInput) QueryMods() []qm.QueryMod {
-	mods := []qm.QueryMod{}
-	// Get reflect value
-	v := reflect.ValueOf(s).Elem()
-	// Iterate struct fields
-	for i := 0; i < v.NumField(); i++ {
-		field := v.Type().Field(i) // StructField
-		value := v.Field(i)        // Value
-		if value.IsNil() || !value.IsValid() {
-			// Skip if field is nil
-			continue
-		}
-
-		// Get column name from tags
-		column, hasColumnName := field.Tag.Lookup("json")
-		// Skip if no DB definition
-		if !hasColumnName {
-			continue
-		}
-
-		operator := "="
-		val := value.Elem().Interface()
-		if dataType := field.Type.String(); (dataType == "string" || dataType == "*string") &&
-			val.(string) != "" {
-			operator = "LIKE"
-			val = fmt.Sprintf("%%%s%%", val)
-		}
-		mods = append(mods, qm.And(fmt.Sprintf("%s %s ?", column, operator), val))
-	}
-	return mods
-}
-
 // AllComments retrieves Comments based on the provided search parameters
 func (r *Resolver) AllComments(ctx context.Context, args struct {
 	Since    *graphql.ID
@@ -277,20 +244,22 @@ func (r *Resolver) AllComments(ctx context.Context, args struct {
 	result := CommentsCollection{}
 
 	mods := []qm.QueryMod{
-		queryModPageSize(args.PageSize),
+		QueryModPageSize(args.PageSize),
 
 		// TODO: Add eager loading based on requested fields
 		qm.Load("Post"),
 	}
 
-	offset, err := queryModOffset(args.Since)
+	offset, err := QueryModOffset(args.Since)
 	if err != nil {
 		return result, err
 	}
-	mods = append(mods, offset)
+	if offset != nil {
+		mods = append(mods, offset)
+	}
 
 	if args.Search != nil {
-		mods = append(mods, args.Search.QueryMods()...)
+		mods = append(mods, QueryModsSearch(args.Search)...)
 	}
 	slice, err := dbmodel.Comments(r.db, mods...).All()
 	if err != nil {

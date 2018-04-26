@@ -14,7 +14,7 @@ func (r *Resolver) All{{$modelNamePlural}}(ctx context.Context, args struct {
 	result := {{$modelNamePlural}}Collection{}
 
 	mods := []qm.QueryMod{
-		queryModPageSize(args.PageSize),
+		QueryModPageSize(args.PageSize),
 		
 		// TODO: Add eager loading based on requested fields
 		{{/* Add eager loaders on FK relationships */}}
@@ -33,15 +33,17 @@ func (r *Resolver) All{{$modelNamePlural}}(ctx context.Context, args struct {
 		qm.Load("{{$txt.Function.Name}}"),
 		{{- end }}
 	}
-
-	offset, err := queryModOffset(args.Since)
+	
+	offset, err := QueryModOffset(args.Since)
 	if err != nil {
 		return result, err
 	}
-	mods = append(mods, offset)
+	if offset != nil {
+		mods = append(mods, offset)
+	}
 	
 	if args.Search != nil {
-		mods = append(mods, args.Search.QueryMods()...)
+		mods = append(mods, QueryModsSearch(args.Search)...)
 	}
 	slice, err := dbmodel.{{$modelNamePlural}}(r.db, mods...).All()
 	if err != nil {
