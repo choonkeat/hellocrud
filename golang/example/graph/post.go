@@ -49,10 +49,12 @@ func NewPost(db boil.Executor, model dbmodel.Post) Post {
 }
 
 // NewPostsCollection returns a new PostsCollection instance
-func NewPostsCollection(nodes []Post) PostsCollection {
-	return PostsCollection{
-		nodes: nodes,
+func NewPostsCollection(db boil.Executor, slice dbmodel.PostSlice) PostsCollection {
+	result := PostsCollection{}
+	for _, m := range slice {
+		result.nodes = append(result.nodes, Post{db: db, model: *m})
 	}
+	return result
 }
 
 // Post is an object to back GraphQL type
@@ -267,9 +269,7 @@ func (r *Resolver) AllPosts(ctx context.Context, args struct {
 	if err != nil {
 		return result, errors.Wrapf(err, "allPosts(%#v)", args)
 	}
-	for _, m := range slice {
-		result.nodes = append(result.nodes, Post{model: *m, db: r.db})
-	}
+	result = NewPostsCollection(r.db, slice)
 
 	return result, nil
 }

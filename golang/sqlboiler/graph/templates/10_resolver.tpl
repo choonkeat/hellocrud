@@ -49,9 +49,7 @@ func (r *Resolver) All{{$modelNamePlural}}(ctx context.Context, args struct {
 	if err != nil {
 		return result, errors.Wrapf(err, "all{{$modelNamePlural}}(%#v)", args)
 	}
-	for _, m := range slice {
-		result.nodes = append(result.nodes, {{$modelName}}{model: *m, db: r.db})
-	}
+	result = New{{$modelNamePlural}}Collection(r.db, slice)
 
 	return result, nil
 }

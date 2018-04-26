@@ -49,10 +49,12 @@ func NewComment(db boil.Executor, model dbmodel.Comment) Comment {
 }
 
 // NewCommentsCollection returns a new CommentsCollection instance
-func NewCommentsCollection(nodes []Comment) CommentsCollection {
-	return CommentsCollection{
-		nodes: nodes,
+func NewCommentsCollection(db boil.Executor, slice dbmodel.CommentSlice) CommentsCollection {
+	result := CommentsCollection{}
+	for _, m := range slice {
+		result.nodes = append(result.nodes, Comment{db: db, model: *m})
 	}
+	return result
 }
 
 // Comment is an object to back GraphQL type
@@ -265,9 +267,7 @@ func (r *Resolver) AllComments(ctx context.Context, args struct {
 	if err != nil {
 		return result, errors.Wrapf(err, "allComments(%#v)", args)
 	}
-	for _, m := range slice {
-		result.nodes = append(result.nodes, Comment{model: *m, db: r.db})
-	}
+	result = NewCommentsCollection(r.db, slice)
 
 	return result, nil
 }
