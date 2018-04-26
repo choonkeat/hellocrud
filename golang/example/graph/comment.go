@@ -283,14 +283,12 @@ func (r *Resolver) AllComments(ctx context.Context, args struct {
 		qm.Load("Post"),
 	}
 
-	if args.Since != nil {
-		s := string(*args.Since)
-		i, err := strconv.ParseInt(s, 10, 64)
-		if err != nil {
-			return result, err
-		}
-		mods = append(mods, qm.Offset(int(i)))
+	offset, err := queryModOffset(args.Since)
+	if err != nil {
+		return result, err
 	}
+	mods = append(mods, offset)
+
 	if args.Search != nil {
 		mods = append(mods, args.Search.QueryMods()...)
 	}

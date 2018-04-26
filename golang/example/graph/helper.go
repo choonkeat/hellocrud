@@ -3,7 +3,12 @@
 
 package graph
 
-import "github.com/volatiletech/sqlboiler/queries/qm"
+import (
+	"strconv"
+
+	graphql "github.com/graph-gophers/graphql-go"
+	"github.com/volatiletech/sqlboiler/queries/qm"
+)
 
 const (
 	// defaultPageSize is used in AllXxx query methods `args.PageSize`
@@ -17,4 +22,18 @@ func queryModPageSize(pageSize *int) qm.QueryMod {
 		l = *pageSize
 	}
 	return qm.Limit(l)
+}
+
+// queryModOffset returns an SQLBoiler QueryMod offset based on the argument
+func queryModOffset(offset *graphql.ID) (qm.QueryMod, error) {
+	if offset == nil {
+		return qm.Offset(0), nil
+	}
+
+	s := string(*offset)
+	i, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	return qm.Offset(int(i)), nil
 }
