@@ -195,6 +195,7 @@ type searchCommentInput struct {
 
 // SearchComments retrieves Comments based on the provided search parameters
 func (r *Resolver) SearchComments(ctx context.Context, args struct {
+	SinceID    *graphql.ID
 	PageNumber *int32
 	PageSize   *int32
 	Input      *searchCommentInput
@@ -207,7 +208,7 @@ func (r *Resolver) SearchComments(ctx context.Context, args struct {
 	}
 
 	// Pagination
-	mods = append(mods, QueryModPagination(args.PageNumber, args.PageSize)...)
+	mods = append(mods, QueryModPagination(args.SinceID, args.PageNumber, args.PageSize)...)
 
 	// Search input
 	mods = append(mods, QueryModSearch(args.Input)...)

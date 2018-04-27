@@ -26,6 +26,7 @@ type Query {
 
 
   searchComments(
+    sinceID: ID
     pageNumber: Int
     pageSize: Int
     input: SearchCommentInput
@@ -37,6 +38,7 @@ type Query {
 
 
   searchPosts(
+    sinceID: ID
     pageNumber: Int
     pageSize: Int
     input: SearchPostInput

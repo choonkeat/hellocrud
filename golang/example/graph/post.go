@@ -197,6 +197,7 @@ type searchPostInput struct {
 
 // SearchPosts retrieves Posts based on the provided search parameters
 func (r *Resolver) SearchPosts(ctx context.Context, args struct {
+	SinceID    *graphql.ID
 	PageNumber *int32
 	PageSize   *int32
 	Input      *searchPostInput
@@ -209,7 +210,7 @@ func (r *Resolver) SearchPosts(ctx context.Context, args struct {
 	}
 
 	// Pagination
-	mods = append(mods, QueryModPagination(args.PageNumber, args.PageSize)...)
+	mods = append(mods, QueryModPagination(args.SinceID, args.PageNumber, args.PageSize)...)
 
 	// Search input
 	mods = append(mods, QueryModSearch(args.Input)...)

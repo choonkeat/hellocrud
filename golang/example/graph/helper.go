@@ -6,7 +6,9 @@ package graph
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 
+	graphql "github.com/graph-gophers/graphql-go"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 )
 
@@ -16,20 +18,53 @@ const (
 )
 
 // QueryModPagination returns SQLBoiler QueryMods for pagination
-func QueryModPagination(pageNum, pageSize *int32) []qm.QueryMod {
+// Supports limit-offset and keyset pagination techniques based on the arguments provided
+//
+// Limit-offset is used to paginate arbitrary queries.
+// Please note that there are performance and inconsistency implications when using this technique.
+// Sample:
+// `QueryModPagination("123", nil, 25)`
+// Retrieves all next 25 records starting from ID 123, ordered by ID
+//
+// Keyset pagination is used to paginate ordered queries (by indexed column - ID)
+// Typically used if performance and page result consistency is important.
+// Sample:
+// `QueryModPagination(nil, 5, 25)`
+// Retrieves page 5 (from 125 - 150), using default order
+//
+// Note: If both sinceID and pageNum is provided, sinceID (keyset pagination) will be used.
+// Reference: https://www.citusdata.com/blog/2016/03/30/five-ways-to-paginate/
+func QueryModPagination(sinceID *graphql.ID, pageNum, pageSize *int32) []qm.QueryMod {
+	mods := []qm.QueryMod{}
+
 	// Page size
 	limit := defaultPageSize // Default page size
 	if pageSize != nil {
 		limit = int(*pageSize)
 	}
+	mods = append(mods, qm.Limit(limit))
 
-	// Page number
-	if pageNum == nil || pageSize == nil {
-		return []qm.QueryMod{qm.Limit(limit)}
+	// Keyset pagination
+	if sinceID != nil {
+		// Parse ID
+		s := string(*sinceID)
+		id, err := strconv.ParseInt(s, 10, 64)
+		if err != nil {
+			return mods
+		}
+
+		// Add ID condition
+		mods = append(mods,
+			qm.And("id > ?", id),
+			qm.OrderBy("id"),
+		)
+	} else if pageNum != nil {
+		// Get offset based on page number and page size
+		offset := int(*pageNum) * limit
+		mods = append(mods, qm.Offset(offset))
 	}
 
-	offset := (int(*pageNum) * int(*pageSize))
-	return []qm.QueryMod{qm.Limit(limit), qm.Offset(offset)}
+	return mods
 }
 
 // QueryModSearch returns a list of search QueryMod based on the struct values

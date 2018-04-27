@@ -19,6 +19,7 @@ type Query {
 {{- $modelNameCamel := $tableNameSingular | camelCase}}
 
   search{{$modelNamePlural}}(
+    sinceID: ID
     pageNumber: Int
     pageSize: Int
     input: Search{{$modelName}}Input

@@ -7,6 +7,7 @@
 
 // Search{{$modelNamePlural}} retrieves {{$modelNamePlural}} based on the provided search parameters
 func (r *Resolver) Search{{$modelNamePlural}}(ctx context.Context, args struct {
+	SinceID *graphql.ID
 	PageNumber *int32
 	PageSize *int32
 	Input *search{{$modelName}}Input
@@ -33,7 +34,7 @@ func (r *Resolver) Search{{$modelNamePlural}}(ctx context.Context, args struct {
 	}
 
 	// Pagination
-	mods = append(mods, QueryModPagination(args.PageNumber, args.PageSize)...)
+	mods = append(mods, QueryModPagination(args.SinceID, args.PageNumber, args.PageSize)...)
 
 	// Search input
 	mods = append(mods, QueryModSearch(args.Input)...)
