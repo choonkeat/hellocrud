@@ -1,5 +1,5 @@
 const (
-  // defaultPageSize is used in AllXxx query methods `args.PageSize`
+  // defaultPageSize is used in SearchXxx query methods `args.PageSize`
   defaultPageSize = 25
 )
 
@@ -20,8 +20,8 @@ func QueryModPagination(pageNum, pageSize *int32) []qm.QueryMod {
   return []qm.QueryMod{qm.Limit(limit), qm.Offset(offset)}
 }
 
-// QueryModsSearch returns a list of QueryMod based on the struct values
-func QueryModsSearch(input interface{}) []qm.QueryMod {
+// QueryModSearch returns a list of search QueryMod based on the struct values
+func QueryModSearch(input interface{}) []qm.QueryMod {
   mods := []qm.QueryMod{}
   // Get reflect value
   v := reflect.ValueOf(input).Elem()

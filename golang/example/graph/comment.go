@@ -210,9 +210,7 @@ func (r *Resolver) SearchComments(ctx context.Context, args struct {
 	mods = append(mods, QueryModPagination(args.PageNumber, args.PageSize)...)
 
 	// Search input
-	if args.Input != nil {
-		mods = append(mods, QueryModsSearch(args.Input)...)
-	}
+	mods = append(mods, QueryModSearch(args.Input)...)
 
 	// Retrieve model/s based on search criteria
 	slice, err := dbmodel.Comments(r.db, mods...).All()

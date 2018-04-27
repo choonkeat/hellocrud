@@ -36,10 +36,8 @@ func (r *Resolver) Search{{$modelNamePlural}}(ctx context.Context, args struct {
 	mods = append(mods, QueryModPagination(args.PageNumber, args.PageSize)...)
 
 	// Search input
-	if args.Input != nil {
-		mods = append(mods, QueryModsSearch(args.Input)...)
-	}
-
+	mods = append(mods, QueryModSearch(args.Input)...)
+	
 	// Retrieve model/s based on search criteria
 	slice, err := dbmodel.{{$modelNamePlural}}(r.db, mods...).All()
 	if err != nil {
