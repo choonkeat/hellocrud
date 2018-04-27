@@ -7,7 +7,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"strconv"
 
 	"github.com/choonkeat/hellocrud/golang/example/dbmodel"
@@ -170,49 +169,6 @@ type updateCommentInput struct {
 	Author string  `json:"author"`
 	Body   string  `json:"body"`
 	Notes  *string `json:"notes"`
-}
-
-// searchCommentArgs is an object to back Comment search arguments type
-type searchCommentArgs struct {
-	PostID    *int32        `json:"post_id"`
-	Author    *string       `json:"author"`
-	Body      *string       `json:"body"`
-	Notes     *string       `json:"notes"`
-	CreatedAt *graphql.Time `json:"created_at"`
-	UpdatedAt *graphql.Time `json:"updated_at"`
-}
-
-// QueryMods returns a list of QueryMod based on the struct values
-func (s *searchCommentArgs) QueryMods() []qm.QueryMod {
-	mods := []qm.QueryMod{}
-	// Get reflect value
-	v := reflect.ValueOf(s).Elem()
-	// Iterate struct fields
-	for i := 0; i < v.NumField(); i++ {
-		field := v.Type().Field(i) // StructField
-		value := v.Field(i)        // Value
-		if value.IsNil() || !value.IsValid() {
-			// Skip if field is nil
-			continue
-		}
-
-		// Get column name from tags
-		column, hasColumnName := field.Tag.Lookup("json")
-		// Skip if no DB definition
-		if !hasColumnName {
-			continue
-		}
-
-		operator := "="
-		val := value.Elem().Interface()
-		if dataType := field.Type.String(); (dataType == "string" || dataType == "*string") &&
-			val.(string) != "" {
-			operator = "LIKE"
-			val = fmt.Sprintf("%%%s%%", val)
-		}
-		mods = append(mods, qm.And(fmt.Sprintf("%s %s ?", column, operator), val))
-	}
-	return mods
 }
 
 // SchemaSearchCommentInput is the schema search input for Comment
