@@ -3,24 +3,24 @@ const (
   defaultPageSize = 25
 )
 
-// QueryModPagination returns SQLBoiler QueryMods for pagination 
+// QueryModPagination returns SQLBoiler QueryMods for pagination
 // Supports limit-offset and keyset pagination techniques based on the arguments provided
-// 
-// Limit-offset is used to paginate arbitrary queries. 
-// Please note that there are performance and inconsistency implications when using this technique.
-// Sample: 
-// `QueryModPagination("123", nil, 25)`
-// Retrieves all next 25 records starting from ID 123, ordered by ID
 //
-// Keyset pagination is used to paginate ordered queries (by indexed column - ID)
-// Typically used if performance and page result consistency is important.
-// Sample: 
+// Limit-offset is used to paginate arbitrary queries.
+// Please note that there are performance and inconsistency implications when using this technique.
+// Sample:
 // `QueryModPagination(nil, 5, 25)`
 // Retrieves page 5 (from 125 - 150), using default order
 //
+// Keyset pagination is used to paginate ordered queries (by indexed column - ID)
+// Typically used if performance and page result consistency is important.
+// Sample:
+// `QueryModPagination("123", nil, 25)`
+// Retrieves all next 25 records *after* ID 123, ordered by ID
+//
 // Note: If both sinceID and pageNum is provided, sinceID (keyset pagination) will be used.
 // Reference: https://www.citusdata.com/blog/2016/03/30/five-ways-to-paginate/
-func QueryModPagination(sinceID *graphql.ID, pageNum, pageSize *int32) []qm.QueryMod { 
+func QueryModPagination(sinceID *graphql.ID, pageNum, pageSize *int32) []qm.QueryMod {
   mods := []qm.QueryMod{}
 
   // Page size
@@ -36,11 +36,11 @@ func QueryModPagination(sinceID *graphql.ID, pageNum, pageSize *int32) []qm.Quer
     s := string(*sinceID)
     id, err := strconv.ParseInt(s, 10, 64)
     if err != nil {
-      return mods 
+      return mods
     }
 
-    // Add ID condition 
-    mods = append(mods, 
+    // Add ID condition
+    mods = append(mods,
       qm.And("id > ?", id),
       qm.OrderBy("id"),
     )
@@ -49,7 +49,7 @@ func QueryModPagination(sinceID *graphql.ID, pageNum, pageSize *int32) []qm.Quer
     offset := int(*pageNum) * limit
     mods = append(mods, qm.Offset(offset))
   }
-    
+
   return mods
 }
 
