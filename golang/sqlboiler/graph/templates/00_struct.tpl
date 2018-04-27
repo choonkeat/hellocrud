@@ -90,10 +90,12 @@ func New{{$modelName}}(db boil.Executor, model dbmodel.{{$modelName}}) {{$modelN
 }
 
 // New{{$modelNamePlural}}Collection returns a new {{$modelNamePlural}}Collection instance
-func New{{$modelNamePlural}}Collection(nodes []{{$modelName}}) {{$modelNamePlural}}Collection {
-	return {{$modelNamePlural}}Collection{
-		nodes: nodes,
+func New{{$modelNamePlural}}Collection(db boil.Executor, slice dbmodel.{{$modelName}}Slice) {{$modelNamePlural}}Collection {
+	result := {{$modelNamePlural}}Collection{}
+	for _, m := range slice {
+		result.nodes = append(result.nodes, {{$modelName}}{db: db, model: *m})
 	}
+	return result
 }
 
 // {{$modelName}} is an object to back GraphQL type

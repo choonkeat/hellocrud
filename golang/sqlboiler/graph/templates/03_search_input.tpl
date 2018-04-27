@@ -109,36 +109,3 @@ type search{{$modelName}}Input struct {
 {{- end -}}
 {{- end }}
 }
-
-// QueryMods returns a list of QueryMod based on the struct values
-func (s *search{{$modelName}}Input) QueryMods() []qm.QueryMod {
-  mods := []qm.QueryMod{}
-  // Get reflect value
-  v := reflect.ValueOf(s).Elem()
-  // Iterate struct fields
-  for i := 0; i < v.NumField(); i++ {
-    field := v.Type().Field(i) // StructField
-    value := v.Field(i) // Value
-    if value.IsNil() || !value.IsValid() {
-      // Skip if field is nil
-      continue
-    }
-
-    // Get column name from tags
-    column, hasColumnName := field.Tag.Lookup("json")
-    // Skip if no DB definition
-    if !hasColumnName {
-      continue
-    }
-
-    operator := "="
-    val := value.Elem().Interface()
-    if dataType := field.Type.String(); (dataType == "string" || dataType == "*string") &&
-      val.(string) != "" {
-      operator = "LIKE"
-      val = fmt.Sprintf("%%%s%%", val)
-    }
-    mods = append(mods, qm.And(fmt.Sprintf("%s %s ?", column, operator), val))
-  }
-  return mods
-}

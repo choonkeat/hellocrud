@@ -5,20 +5,16 @@
 {{- $modelNameCamel := $tableNameSingular | camelCase}}
 {{- $pkColDefs := sqlColDefinitions .Table.Columns .Table.PKey.Columns}}
 
-// All{{$modelNamePlural}} retrieves {{$modelNamePlural}} based on the provided search parameters
-func (r *Resolver) All{{$modelNamePlural}}(ctx context.Context, args struct {
-	Since    *graphql.ID
+// Search{{$modelNamePlural}} retrieves {{$modelNamePlural}} based on the provided search parameters
+func (r *Resolver) Search{{$modelNamePlural}}(ctx context.Context, args struct {
+	SinceID *graphql.ID
+	PageNumber *int32
 	PageSize *int32
-	Search *search{{$modelName}}Input
+	Input *search{{$modelName}}Input
 }) ({{$modelNamePlural}}Collection, error) {
 	result := {{$modelNamePlural}}Collection{}
 
-	pageSize := defaultPageSize // Default page size
-	if args.PageSize != nil {
-		pageSize = int(*args.PageSize)
-	}
 	mods := []qm.QueryMod{
-		qm.Limit(pageSize),
 		// TODO: Add eager loading based on requested fields
 		{{/* Add eager loaders on FK relationships */}}
 		{{- range .Table.FKeys -}}
@@ -37,24 +33,20 @@ func (r *Resolver) All{{$modelNamePlural}}(ctx context.Context, args struct {
 		{{- end }}
 	}
 
-	if args.Since != nil {
-		s := string(*args.Since)
-		i, err := strconv.ParseInt(s, 10, 64)
-		if err != nil {
-			return result, err
-		}
-		mods = append(mods, qm.Offset(int(i)))
-	}
-	if args.Search != nil {
-		mods = append(mods, args.Search.QueryMods()...)
-	}
+	// Pagination
+	mods = append(mods, QueryModPagination(args.SinceID, args.PageNumber, args.PageSize)...)
+
+	// Search input
+	mods = append(mods, QueryModSearch(args.Input)...)
+	
+	// Retrieve model/s based on search criteria
 	slice, err := dbmodel.{{$modelNamePlural}}(r.db, mods...).All()
 	if err != nil {
-		return result, errors.Wrapf(err, "all{{$modelNamePlural}}(%#v)", args)
+		return result, errors.Wrapf(err, "search{{$modelNamePlural}}(%#v)", args)
 	}
-	for _, m := range slice {
-		result.nodes = append(result.nodes, {{$modelName}}{model: *m, db: r.db})
-	}
+
+	// Convert to GraphQL type resolver
+	result = New{{$modelNamePlural}}Collection(r.db, slice)
 
 	return result, nil
 }

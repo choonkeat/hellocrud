@@ -7,7 +7,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"strconv"
 
 	"github.com/choonkeat/hellocrud/golang/example/dbmodel"
@@ -49,10 +48,12 @@ func NewComment(db boil.Executor, model dbmodel.Comment) Comment {
 }
 
 // NewCommentsCollection returns a new CommentsCollection instance
-func NewCommentsCollection(nodes []Comment) CommentsCollection {
-	return CommentsCollection{
-		nodes: nodes,
+func NewCommentsCollection(db boil.Executor, slice dbmodel.CommentSlice) CommentsCollection {
+	result := CommentsCollection{}
+	for _, m := range slice {
+		result.nodes = append(result.nodes, Comment{db: db, model: *m})
 	}
+	return result
 }
 
 // Comment is an object to back GraphQL type
@@ -170,49 +171,6 @@ type updateCommentInput struct {
 	Notes  *string `json:"notes"`
 }
 
-// searchCommentArgs is an object to back Comment search arguments type
-type searchCommentArgs struct {
-	PostID    *int32        `json:"post_id"`
-	Author    *string       `json:"author"`
-	Body      *string       `json:"body"`
-	Notes     *string       `json:"notes"`
-	CreatedAt *graphql.Time `json:"created_at"`
-	UpdatedAt *graphql.Time `json:"updated_at"`
-}
-
-// QueryMods returns a list of QueryMod based on the struct values
-func (s *searchCommentArgs) QueryMods() []qm.QueryMod {
-	mods := []qm.QueryMod{}
-	// Get reflect value
-	v := reflect.ValueOf(s).Elem()
-	// Iterate struct fields
-	for i := 0; i < v.NumField(); i++ {
-		field := v.Type().Field(i) // StructField
-		value := v.Field(i)        // Value
-		if value.IsNil() || !value.IsValid() {
-			// Skip if field is nil
-			continue
-		}
-
-		// Get column name from tags
-		column, hasColumnName := field.Tag.Lookup("json")
-		// Skip if no DB definition
-		if !hasColumnName {
-			continue
-		}
-
-		operator := "="
-		val := value.Elem().Interface()
-		if dataType := field.Type.String(); (dataType == "string" || dataType == "*string") &&
-			val.(string) != "" {
-			operator = "LIKE"
-			val = fmt.Sprintf("%%%s%%", val)
-		}
-		mods = append(mods, qm.And(fmt.Sprintf("%s %s ?", column, operator), val))
-	}
-	return mods
-}
-
 // SchemaSearchCommentInput is the schema search input for Comment
 var SchemaSearchCommentInput = `
 # SearchCommentInput is a search input/arguments type for Comment resources
@@ -235,75 +193,34 @@ type searchCommentInput struct {
 	UpdatedAt *graphql.Time `json:"updated_at"`
 }
 
-// QueryMods returns a list of QueryMod based on the struct values
-func (s *searchCommentInput) QueryMods() []qm.QueryMod {
-	mods := []qm.QueryMod{}
-	// Get reflect value
-	v := reflect.ValueOf(s).Elem()
-	// Iterate struct fields
-	for i := 0; i < v.NumField(); i++ {
-		field := v.Type().Field(i) // StructField
-		value := v.Field(i)        // Value
-		if value.IsNil() || !value.IsValid() {
-			// Skip if field is nil
-			continue
-		}
-
-		// Get column name from tags
-		column, hasColumnName := field.Tag.Lookup("json")
-		// Skip if no DB definition
-		if !hasColumnName {
-			continue
-		}
-
-		operator := "="
-		val := value.Elem().Interface()
-		if dataType := field.Type.String(); (dataType == "string" || dataType == "*string") &&
-			val.(string) != "" {
-			operator = "LIKE"
-			val = fmt.Sprintf("%%%s%%", val)
-		}
-		mods = append(mods, qm.And(fmt.Sprintf("%s %s ?", column, operator), val))
-	}
-	return mods
-}
-
-// AllComments retrieves Comments based on the provided search parameters
-func (r *Resolver) AllComments(ctx context.Context, args struct {
-	Since    *graphql.ID
-	PageSize *int32
-	Search   *searchCommentInput
+// SearchComments retrieves Comments based on the provided search parameters
+func (r *Resolver) SearchComments(ctx context.Context, args struct {
+	SinceID    *graphql.ID
+	PageNumber *int32
+	PageSize   *int32
+	Input      *searchCommentInput
 }) (CommentsCollection, error) {
 	result := CommentsCollection{}
 
-	pageSize := defaultPageSize // Default page size
-	if args.PageSize != nil {
-		pageSize = int(*args.PageSize)
-	}
 	mods := []qm.QueryMod{
-		qm.Limit(pageSize),
 		// TODO: Add eager loading based on requested fields
 		qm.Load("Post"),
 	}
 
-	if args.Since != nil {
-		s := string(*args.Since)
-		i, err := strconv.ParseInt(s, 10, 64)
-		if err != nil {
-			return result, err
-		}
-		mods = append(mods, qm.Offset(int(i)))
-	}
-	if args.Search != nil {
-		mods = append(mods, args.Search.QueryMods()...)
-	}
+	// Pagination
+	mods = append(mods, QueryModPagination(args.SinceID, args.PageNumber, args.PageSize)...)
+
+	// Search input
+	mods = append(mods, QueryModSearch(args.Input)...)
+
+	// Retrieve model/s based on search criteria
 	slice, err := dbmodel.Comments(r.db, mods...).All()
 	if err != nil {
-		return result, errors.Wrapf(err, "allComments(%#v)", args)
+		return result, errors.Wrapf(err, "searchComments(%#v)", args)
 	}
-	for _, m := range slice {
-		result.nodes = append(result.nodes, Comment{model: *m, db: r.db})
-	}
+
+	// Convert to GraphQL type resolver
+	result = NewCommentsCollection(r.db, slice)
 
 	return result, nil
 }

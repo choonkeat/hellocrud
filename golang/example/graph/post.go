@@ -7,7 +7,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"strconv"
 
 	"github.com/choonkeat/hellocrud/golang/example/dbmodel"
@@ -49,10 +48,12 @@ func NewPost(db boil.Executor, model dbmodel.Post) Post {
 }
 
 // NewPostsCollection returns a new PostsCollection instance
-func NewPostsCollection(nodes []Post) PostsCollection {
-	return PostsCollection{
-		nodes: nodes,
+func NewPostsCollection(db boil.Executor, slice dbmodel.PostSlice) PostsCollection {
+	result := PostsCollection{}
+	for _, m := range slice {
+		result.nodes = append(result.nodes, Post{db: db, model: *m})
 	}
+	return result
 }
 
 // Post is an object to back GraphQL type
@@ -172,49 +173,6 @@ type updatePostInput struct {
 	Notes  *string `json:"notes"`
 }
 
-// searchPostArgs is an object to back Post search arguments type
-type searchPostArgs struct {
-	Title     *string       `json:"title"`
-	Author    *string       `json:"author"`
-	Body      *string       `json:"body"`
-	Notes     *string       `json:"notes"`
-	CreatedAt *graphql.Time `json:"created_at"`
-	UpdatedAt *graphql.Time `json:"updated_at"`
-}
-
-// QueryMods returns a list of QueryMod based on the struct values
-func (s *searchPostArgs) QueryMods() []qm.QueryMod {
-	mods := []qm.QueryMod{}
-	// Get reflect value
-	v := reflect.ValueOf(s).Elem()
-	// Iterate struct fields
-	for i := 0; i < v.NumField(); i++ {
-		field := v.Type().Field(i) // StructField
-		value := v.Field(i)        // Value
-		if value.IsNil() || !value.IsValid() {
-			// Skip if field is nil
-			continue
-		}
-
-		// Get column name from tags
-		column, hasColumnName := field.Tag.Lookup("json")
-		// Skip if no DB definition
-		if !hasColumnName {
-			continue
-		}
-
-		operator := "="
-		val := value.Elem().Interface()
-		if dataType := field.Type.String(); (dataType == "string" || dataType == "*string") &&
-			val.(string) != "" {
-			operator = "LIKE"
-			val = fmt.Sprintf("%%%s%%", val)
-		}
-		mods = append(mods, qm.And(fmt.Sprintf("%s %s ?", column, operator), val))
-	}
-	return mods
-}
-
 // SchemaSearchPostInput is the schema search input for Post
 var SchemaSearchPostInput = `
 # SearchPostInput is a search input/arguments type for Post resources
@@ -237,75 +195,34 @@ type searchPostInput struct {
 	UpdatedAt *graphql.Time `json:"updated_at"`
 }
 
-// QueryMods returns a list of QueryMod based on the struct values
-func (s *searchPostInput) QueryMods() []qm.QueryMod {
-	mods := []qm.QueryMod{}
-	// Get reflect value
-	v := reflect.ValueOf(s).Elem()
-	// Iterate struct fields
-	for i := 0; i < v.NumField(); i++ {
-		field := v.Type().Field(i) // StructField
-		value := v.Field(i)        // Value
-		if value.IsNil() || !value.IsValid() {
-			// Skip if field is nil
-			continue
-		}
-
-		// Get column name from tags
-		column, hasColumnName := field.Tag.Lookup("json")
-		// Skip if no DB definition
-		if !hasColumnName {
-			continue
-		}
-
-		operator := "="
-		val := value.Elem().Interface()
-		if dataType := field.Type.String(); (dataType == "string" || dataType == "*string") &&
-			val.(string) != "" {
-			operator = "LIKE"
-			val = fmt.Sprintf("%%%s%%", val)
-		}
-		mods = append(mods, qm.And(fmt.Sprintf("%s %s ?", column, operator), val))
-	}
-	return mods
-}
-
-// AllPosts retrieves Posts based on the provided search parameters
-func (r *Resolver) AllPosts(ctx context.Context, args struct {
-	Since    *graphql.ID
-	PageSize *int32
-	Search   *searchPostInput
+// SearchPosts retrieves Posts based on the provided search parameters
+func (r *Resolver) SearchPosts(ctx context.Context, args struct {
+	SinceID    *graphql.ID
+	PageNumber *int32
+	PageSize   *int32
+	Input      *searchPostInput
 }) (PostsCollection, error) {
 	result := PostsCollection{}
 
-	pageSize := defaultPageSize // Default page size
-	if args.PageSize != nil {
-		pageSize = int(*args.PageSize)
-	}
 	mods := []qm.QueryMod{
-		qm.Limit(pageSize),
 		// TODO: Add eager loading based on requested fields
 		qm.Load("Comments"),
 	}
 
-	if args.Since != nil {
-		s := string(*args.Since)
-		i, err := strconv.ParseInt(s, 10, 64)
-		if err != nil {
-			return result, err
-		}
-		mods = append(mods, qm.Offset(int(i)))
-	}
-	if args.Search != nil {
-		mods = append(mods, args.Search.QueryMods()...)
-	}
+	// Pagination
+	mods = append(mods, QueryModPagination(args.SinceID, args.PageNumber, args.PageSize)...)
+
+	// Search input
+	mods = append(mods, QueryModSearch(args.Input)...)
+
+	// Retrieve model/s based on search criteria
 	slice, err := dbmodel.Posts(r.db, mods...).All()
 	if err != nil {
-		return result, errors.Wrapf(err, "allPosts(%#v)", args)
+		return result, errors.Wrapf(err, "searchPosts(%#v)", args)
 	}
-	for _, m := range slice {
-		result.nodes = append(result.nodes, Post{model: *m, db: r.db})
-	}
+
+	// Convert to GraphQL type resolver
+	result = NewPostsCollection(r.db, slice)
 
 	return result, nil
 }
