@@ -36,7 +36,7 @@ export class TupleForm extends React.Component {
 
     let setState = this.setState.bind(this)
     this.props.mutate(mutateInput).then((...args) => {
-      if (this.props.allCommentsData && this.props.allCommentsData.refetch) this.props.allCommentsData.refetch()
+      if (this.props.searchCommentsData && this.props.searchCommentsData.refetch) this.props.searchCommentsData.refetch()
       this.props.history.push('/comments')
     }).catch((error) => {
       setState({ errors: [error] })
@@ -150,14 +150,14 @@ export const DeleteTuple = graphql(gql`
       updatedAt
     }
   }
-`, {name: 'deleteCommentByID'})(({ id, deleteCommentByID, allCommentsData }) => {
+`, {name: 'deleteCommentByID'})(({ id, deleteCommentByID, searchCommentsData }) => {
   let onClick = () => {
     deleteCommentByID({
       variables: {
         id: id
       }
     }).then((...args) => {
-      if (allCommentsData && allCommentsData.refetch) allCommentsData.refetch()
+      if (searchCommentsData && searchCommentsData.refetch) searchCommentsData.refetch()
     }).catch((error) => {
       console.log('there was an error sending the query', JSON.stringify(error))
     })
@@ -171,7 +171,7 @@ export const DeleteTuple = graphql(gql`
   </div>
 })
 
-export const ListTuples = ({allCommentsData}) => {
+export const ListTuples = ({searchCommentsData}) => {
   return <div className='card-body'>
     <Link to='/'>&larr; Home</Link><h1 className='card-title'>Comments</h1>
     <div className='float-right'>
@@ -192,7 +192,7 @@ export const ListTuples = ({allCommentsData}) => {
         </tr>
       </thead>
       <tbody>
-        {((allCommentsData.allComments && allCommentsData.allComments.nodes) || []).map(row => {
+        {((searchCommentsData.searchComments && searchCommentsData.searchComments.nodes) || []).map(row => {
           return <tr key={row.rowId}>
             <td><Link to={`/comments/${row.id}`}>{row.id}</Link></td>
             <td><Link to={`/comments/${row.id}`}>{row.postID}</Link></td>
@@ -202,7 +202,7 @@ export const ListTuples = ({allCommentsData}) => {
             <td><Link to={`/comments/${row.id}`}>{row.createdAt}</Link></td>
             <td><Link to={`/comments/${row.id}`}>{row.updatedAt}</Link></td>
             <td><Link to={`/comments/${row.id}/edit`}><button className='btn btn-secondary'>Edit</button></Link></td>
-            <td><DeleteTuple id={row.id} allCommentsData={allCommentsData} /></td>
+            <td><DeleteTuple id={row.id} searchCommentsData={searchCommentsData} /></td>
           </tr>
         })}
       </tbody>
@@ -249,8 +249,8 @@ export const Create = graphql(gql`
       updatedAt
     }
   }
-`, {name: 'createComment'})(({current, history, allCommentsData, createComment}) => {
-  return <TupleForm current={current} history={history} allCommentsData={allCommentsData} mutate={createComment} />
+`, {name: 'createComment'})(({current, history, searchCommentsData, createComment}) => {
+  return <TupleForm current={current} history={history} searchCommentsData={searchCommentsData} mutate={createComment} />
 })
 
 export const Edit = graphql(gql`
@@ -266,13 +266,13 @@ export const Edit = graphql(gql`
       updatedAt
     }
   }
-`, {name: 'updateCommentByID'})(({current, history, allCommentsData, updateCommentByID}) => {
-  return <TupleForm current={current} history={history} allCommentsData={allCommentsData} mutate={updateCommentByID} />
+`, {name: 'updateCommentByID'})(({current, history, searchCommentsData, updateCommentByID}) => {
+  return <TupleForm current={current} history={history} searchCommentsData={searchCommentsData} mutate={updateCommentByID} />
 })
 
 export const Crud = graphql(gql`
-  query allComments($search: SearchCommentArgs){
-    allComments(pageSize: 30, search: $search) {
+  query searchComments($search: SearchCommentInput){
+    searchComments(pageSize: 30, input: $search) {
       nodes {
         rowId
         id
@@ -285,11 +285,11 @@ export const Crud = graphql(gql`
       }
     }
   }
-`, {name: 'allCommentsData'})(({search, history, allCommentsData}) => {
+`, {name: 'searchCommentsData'})(({search, history, searchCommentsData}) => {
   return <div>
     <Switch>
-      <Route exact path='/comments' render={() => <ListTuples history={history} allCommentsData={allCommentsData} search={search} />} />
-      <Route exact path='/comments/new' render={() => <Create history={history} allCommentsData={allCommentsData} />} />
+      <Route exact path='/comments' render={() => <ListTuples history={history} searchCommentsData={searchCommentsData} search={search} />} />
+      <Route exact path='/comments/new' render={() => <Create history={history} searchCommentsData={searchCommentsData} />} />
       <Route path='/comments/:rowid/edit' render={({ match: { params } }) => {
         return <GetTuple rowid={params.rowid}><Edit history={history} params={params} /></GetTuple>
       }} />
@@ -305,8 +305,8 @@ export const Crud = graphql(gql`
 const Component = {
   Crud: Crud,
   List: graphql(gql`
-    query allComments($search: SearchCommentArgs){
-      allComments(pageSize: 30, search: $search) {
+    query searchComments($search: SearchCommentInput){
+      searchComments(pageSize: 30, input: $search) {
         nodes {
           rowId
           id
@@ -319,7 +319,7 @@ const Component = {
         }
       }
     }
-  `, {name: 'allCommentsData'})(props => <ListTuples {...props} />),
+  `, {name: 'searchCommentsData'})(props => <ListTuples {...props} />),
   Create: Create,
   Edit: Edit
 }

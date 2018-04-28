@@ -44,7 +44,7 @@
 //
 //     let setState = this.setState.bind(this)
 //     this.props.mutate(mutateInput).then((...args) => {
-//       if (this.props.all{{ $modelNamePlural }}Data && this.props.all{{ $modelNamePlural }}Data.refetch) this.props.all{{ $modelNamePlural }}Data.refetch()
+//       if (this.props.search{{ $modelNamePlural }}Data && this.props.search{{ $modelNamePlural }}Data.refetch) this.props.search{{ $modelNamePlural }}Data.refetch()
 //       this.props.history.push('/{{ $tableNamePlural }}')
 //     }).catch((error) => {
 //       setState({ errors: [error] })
@@ -124,14 +124,14 @@
 {{ end -}}
 //     }
 //   }
-// `, {name: 'delete{{ $modelName }}ByID'})(({ id, delete{{ $modelName }}ByID, all{{ $modelNamePlural }}Data }) => {
+// `, {name: 'delete{{ $modelName }}ByID'})(({ id, delete{{ $modelName }}ByID, search{{ $modelNamePlural }}Data }) => {
 //   let onClick = () => {
 //     delete{{ $modelName }}ByID({
 //       variables: {
 //         id: id
 //       }
 //     }).then((...args) => {
-//       if (all{{ $modelNamePlural }}Data && all{{ $modelNamePlural }}Data.refetch) all{{ $modelNamePlural }}Data.refetch()
+//       if (search{{ $modelNamePlural }}Data && search{{ $modelNamePlural }}Data.refetch) search{{ $modelNamePlural }}Data.refetch()
 //     }).catch((error) => {
 //       console.log('there was an error sending the query', JSON.stringify(error))
 //     })
@@ -145,7 +145,7 @@
 //   </div>
 // })
 //
-// export const ListTuples = ({all{{ $modelNamePlural }}Data}) => {
+// export const ListTuples = ({search{{ $modelNamePlural }}Data}) => {
 //   return <div className='card-body'>
 //     <Link to='/'>&larr; Home</Link><h1 className='card-title'>{{ $modelNamePlural }}</h1>
 //     <div className='float-right'>
@@ -162,13 +162,13 @@
 //         </tr>
 //       </thead>
 //       <tbody>
-//         {((all{{ $modelNamePlural }}Data.all{{ $modelNamePlural }} && all{{ $modelNamePlural }}Data.all{{ $modelNamePlural }}.nodes) || []).map(row => {
+//         {((search{{ $modelNamePlural }}Data.search{{ $modelNamePlural }} && search{{ $modelNamePlural }}Data.search{{ $modelNamePlural }}.nodes) || []).map(row => {
 //           return <tr key={row.rowId}>
 {{ range $column := .Table.Columns -}}
 //             <td><Link to={`/{{ $tableNamePlural }}/${row.id}`}>{row.{{ $column.Name | camelCase }}}</Link></td>
 {{ end -}}
 //             <td><Link to={`/{{ $tableNamePlural }}/${row.id}/edit`}><button className='btn btn-secondary'>Edit</button></Link></td>
-//             <td><DeleteTuple id={row.id} all{{ $modelNamePlural }}Data={all{{ $modelNamePlural }}Data} /></td>
+//             <td><DeleteTuple id={row.id} search{{ $modelNamePlural }}Data={search{{ $modelNamePlural }}Data} /></td>
 //           </tr>
 //         })}
 //       </tbody>
@@ -207,8 +207,8 @@
 {{ end -}}
 //     }
 //   }
-// `, {name: 'create{{ $modelName }}'})(({current, history, all{{ $modelNamePlural }}Data, create{{ $modelName }}}) => {
-//   return <TupleForm current={current} history={history} all{{ $modelNamePlural }}Data={all{{ $modelNamePlural }}Data} mutate={create{{ $modelName }}} />
+// `, {name: 'create{{ $modelName }}'})(({current, history, search{{ $modelNamePlural }}Data, create{{ $modelName }}}) => {
+//   return <TupleForm current={current} history={history} search{{ $modelNamePlural }}Data={search{{ $modelNamePlural }}Data} mutate={create{{ $modelName }}} />
 // })
 //
 // export const Edit = graphql(gql`
@@ -220,13 +220,13 @@
 {{ end -}}
 //     }
 //   }
-// `, {name: 'update{{ $modelName }}ByID'})(({current, history, all{{ $modelNamePlural }}Data, update{{ $modelName }}ByID}) => {
-//   return <TupleForm current={current} history={history} all{{ $modelNamePlural }}Data={all{{ $modelNamePlural }}Data} mutate={update{{ $modelName }}ByID} />
+// `, {name: 'update{{ $modelName }}ByID'})(({current, history, search{{ $modelNamePlural }}Data, update{{ $modelName }}ByID}) => {
+//   return <TupleForm current={current} history={history} search{{ $modelNamePlural }}Data={search{{ $modelNamePlural }}Data} mutate={update{{ $modelName }}ByID} />
 // })
 //
 // export const Crud = graphql(gql`
-//   query all{{ $modelNamePlural }}($search: Search{{ $modelName }}Args){
-//     all{{ $modelNamePlural }}(pageSize: 30, search: $search) {
+//   query search{{ $modelNamePlural }}($search: Search{{ $modelName }}Input){
+//     search{{ $modelNamePlural }}(pageSize: 30, input: $search) {
 //       nodes {
 //         rowId
 {{ range $column := .Table.Columns -}}
@@ -235,11 +235,11 @@
 //       }
 //     }
 //   }
-// `, {name: 'all{{ $modelNamePlural }}Data'})(({search, history, all{{ $modelNamePlural }}Data}) => {
+// `, {name: 'search{{ $modelNamePlural }}Data'})(({search, history, search{{ $modelNamePlural }}Data}) => {
 //   return <div>
 //     <Switch>
-//       <Route exact path='/{{ $tableNamePlural }}' render={() => <ListTuples history={history} all{{ $modelNamePlural }}Data={all{{ $modelNamePlural }}Data} search={search} />} />
-//       <Route exact path='/{{ $tableNamePlural }}/new' render={() => <Create history={history} all{{ $modelNamePlural }}Data={all{{ $modelNamePlural }}Data} />} />
+//       <Route exact path='/{{ $tableNamePlural }}' render={() => <ListTuples history={history} search{{ $modelNamePlural }}Data={search{{ $modelNamePlural }}Data} search={search} />} />
+//       <Route exact path='/{{ $tableNamePlural }}/new' render={() => <Create history={history} search{{ $modelNamePlural }}Data={search{{ $modelNamePlural }}Data} />} />
 //       <Route path='/{{ $tableNamePlural }}/:rowid/edit' render={({ match: { params } }) => {
 //         return <GetTuple rowid={params.rowid}><Edit history={history} params={params} /></GetTuple>
 //       }} />
@@ -255,8 +255,8 @@
 // const Component = {
 //   Crud: Crud,
 //   List: graphql(gql`
-//     query all{{ $modelNamePlural }}($search: Search{{ $modelName }}Args){
-//       all{{ $modelNamePlural }}(pageSize: 30, search: $search) {
+//     query search{{ $modelNamePlural }}($search: Search{{ $modelName }}Input){
+//       search{{ $modelNamePlural }}(pageSize: 30, input: $search) {
 //         nodes {
 //           rowId
 //           id
@@ -269,7 +269,7 @@
 //         }
 //       }
 //     }
-//   `, {name: 'all{{ $modelNamePlural }}Data'})(props => <ListTuples {...props} />),
+//   `, {name: 'search{{ $modelNamePlural }}Data'})(props => <ListTuples {...props} />),
 //   Create: Create,
 //   Edit: Edit
 // }

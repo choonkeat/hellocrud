@@ -36,7 +36,7 @@ export class TupleForm extends React.Component {
 
     let setState = this.setState.bind(this)
     this.props.mutate(mutateInput).then((...args) => {
-      if (this.props.allPostsData && this.props.allPostsData.refetch) this.props.allPostsData.refetch()
+      if (this.props.searchPostsData && this.props.searchPostsData.refetch) this.props.searchPostsData.refetch()
       this.props.history.push('/posts')
     }).catch((error) => {
       setState({ errors: [error] })
@@ -150,14 +150,14 @@ export const DeleteTuple = graphql(gql`
       updatedAt
     }
   }
-`, {name: 'deletePostByID'})(({ id, deletePostByID, allPostsData }) => {
+`, {name: 'deletePostByID'})(({ id, deletePostByID, searchPostsData }) => {
   let onClick = () => {
     deletePostByID({
       variables: {
         id: id
       }
     }).then((...args) => {
-      if (allPostsData && allPostsData.refetch) allPostsData.refetch()
+      if (searchPostsData && searchPostsData.refetch) searchPostsData.refetch()
     }).catch((error) => {
       console.log('there was an error sending the query', JSON.stringify(error))
     })
@@ -171,7 +171,7 @@ export const DeleteTuple = graphql(gql`
   </div>
 })
 
-export const ListTuples = ({allPostsData}) => {
+export const ListTuples = ({searchPostsData}) => {
   return <div className='card-body'>
     <Link to='/'>&larr; Home</Link><h1 className='card-title'>Posts</h1>
     <div className='float-right'>
@@ -192,7 +192,7 @@ export const ListTuples = ({allPostsData}) => {
         </tr>
       </thead>
       <tbody>
-        {((allPostsData.allPosts && allPostsData.allPosts.nodes) || []).map(row => {
+        {((searchPostsData.searchPosts && searchPostsData.searchPosts.nodes) || []).map(row => {
           return <tr key={row.rowId}>
             <td><Link to={`/posts/${row.id}`}>{row.id}</Link></td>
             <td><Link to={`/posts/${row.id}`}>{row.title}</Link></td>
@@ -202,7 +202,7 @@ export const ListTuples = ({allPostsData}) => {
             <td><Link to={`/posts/${row.id}`}>{row.createdAt}</Link></td>
             <td><Link to={`/posts/${row.id}`}>{row.updatedAt}</Link></td>
             <td><Link to={`/posts/${row.id}/edit`}><button className='btn btn-secondary'>Edit</button></Link></td>
-            <td><DeleteTuple id={row.id} allPostsData={allPostsData} /></td>
+            <td><DeleteTuple id={row.id} searchPostsData={searchPostsData} /></td>
           </tr>
         })}
       </tbody>
@@ -249,8 +249,8 @@ export const Create = graphql(gql`
       updatedAt
     }
   }
-`, {name: 'createPost'})(({current, history, allPostsData, createPost}) => {
-  return <TupleForm current={current} history={history} allPostsData={allPostsData} mutate={createPost} />
+`, {name: 'createPost'})(({current, history, searchPostsData, createPost}) => {
+  return <TupleForm current={current} history={history} searchPostsData={searchPostsData} mutate={createPost} />
 })
 
 export const Edit = graphql(gql`
@@ -266,13 +266,13 @@ export const Edit = graphql(gql`
       updatedAt
     }
   }
-`, {name: 'updatePostByID'})(({current, history, allPostsData, updatePostByID}) => {
-  return <TupleForm current={current} history={history} allPostsData={allPostsData} mutate={updatePostByID} />
+`, {name: 'updatePostByID'})(({current, history, searchPostsData, updatePostByID}) => {
+  return <TupleForm current={current} history={history} searchPostsData={searchPostsData} mutate={updatePostByID} />
 })
 
 export const Crud = graphql(gql`
-  query allPosts($search: SearchPostArgs){
-    allPosts(pageSize: 30, search: $search) {
+  query searchPosts($search: SearchPostInput){
+    searchPosts(pageSize: 30, input: $search) {
       nodes {
         rowId
         id
@@ -285,11 +285,11 @@ export const Crud = graphql(gql`
       }
     }
   }
-`, {name: 'allPostsData'})(({search, history, allPostsData}) => {
+`, {name: 'searchPostsData'})(({search, history, searchPostsData}) => {
   return <div>
     <Switch>
-      <Route exact path='/posts' render={() => <ListTuples history={history} allPostsData={allPostsData} search={search} />} />
-      <Route exact path='/posts/new' render={() => <Create history={history} allPostsData={allPostsData} />} />
+      <Route exact path='/posts' render={() => <ListTuples history={history} searchPostsData={searchPostsData} search={search} />} />
+      <Route exact path='/posts/new' render={() => <Create history={history} searchPostsData={searchPostsData} />} />
       <Route path='/posts/:rowid/edit' render={({ match: { params } }) => {
         return <GetTuple rowid={params.rowid}><Edit history={history} params={params} /></GetTuple>
       }} />
@@ -305,8 +305,8 @@ export const Crud = graphql(gql`
 const Component = {
   Crud: Crud,
   List: graphql(gql`
-    query allPosts($search: SearchPostArgs){
-      allPosts(pageSize: 30, search: $search) {
+    query searchPosts($search: SearchPostInput){
+      searchPosts(pageSize: 30, input: $search) {
         nodes {
           rowId
           id
@@ -319,7 +319,7 @@ const Component = {
         }
       }
     }
-  `, {name: 'allPostsData'})(props => <ListTuples {...props} />),
+  `, {name: 'searchPostsData'})(props => <ListTuples {...props} />),
   Create: Create,
   Edit: Edit
 }
