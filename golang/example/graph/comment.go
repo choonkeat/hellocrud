@@ -155,7 +155,6 @@ type createCommentInput struct {
 // SchemaUpdateCommentInput is the schema update input for Comment
 var SchemaUpdateCommentInput = `
 input UpdateCommentInput {
-	
 	  postID: Int!
 	  author: String!
 	  body: String!
