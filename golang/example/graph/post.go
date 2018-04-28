@@ -157,7 +157,6 @@ type createPostInput struct {
 // SchemaUpdatePostInput is the schema update input for Post
 var SchemaUpdatePostInput = `
 input UpdatePostInput {
-	
 	  title: String!
 	  author: String!
 	  body: String!

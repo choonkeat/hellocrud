@@ -75,6 +75,9 @@ func QueryModSearch(input interface{}) []qm.QueryMod {
 	}
 	// Get reflect value
 	v := reflect.ValueOf(input).Elem()
+	if !v.IsValid() || v.IsNil() {
+		return mods
+	}
 	// Iterate struct fields
 	for i := 0; i < v.NumField(); i++ {
 		field := v.Type().Field(i) // StructField

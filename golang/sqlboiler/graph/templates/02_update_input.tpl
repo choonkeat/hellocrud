@@ -6,7 +6,7 @@
 // SchemaUpdate{{$modelName}}Input is the schema update input for {{$modelName}}
 var SchemaUpdate{{$modelName}}Input = `
 input Update{{$modelName}}Input {
-	{{range $column := .Table.Columns }}
+	{{- range $column := .Table.Columns }}
 	{{- if containsAny $pkColNames $column.Name }}
 	{{- else if eq $column.Name "created_by" }}
 	{{- else if eq $column.Name "created_at" }}
