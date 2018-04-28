@@ -56,6 +56,9 @@ func QueryModPagination(sinceID *graphql.ID, pageNum, pageSize *int32) []qm.Quer
 // QueryModSearch returns a list of search QueryMod based on the struct values
 func QueryModSearch(input interface{}) []qm.QueryMod {
   mods := []qm.QueryMod{}
+  if reflect.ValueOf(input).IsNil() {
+    return mods
+  }
   // Get reflect value
   v := reflect.ValueOf(input).Elem()
   // Iterate struct fields

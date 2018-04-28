@@ -23,14 +23,14 @@ const (
 // Limit-offset is used to paginate arbitrary queries.
 // Please note that there are performance and inconsistency implications when using this technique.
 // Sample:
-// `QueryModPagination("123", nil, 25)`
-// Retrieves all next 25 records starting from ID 123, ordered by ID
+// `QueryModPagination(nil, 5, 25)`
+// Retrieves page 5 (from 125 - 150), using default order
 //
 // Keyset pagination is used to paginate ordered queries (by indexed column - ID)
 // Typically used if performance and page result consistency is important.
 // Sample:
-// `QueryModPagination(nil, 5, 25)`
-// Retrieves page 5 (from 125 - 150), using default order
+// `QueryModPagination("123", nil, 25)`
+// Retrieves all next 25 records *after* ID 123, ordered by ID
 //
 // Note: If both sinceID and pageNum is provided, sinceID (keyset pagination) will be used.
 // Reference: https://www.citusdata.com/blog/2016/03/30/five-ways-to-paginate/
@@ -70,6 +70,9 @@ func QueryModPagination(sinceID *graphql.ID, pageNum, pageSize *int32) []qm.Quer
 // QueryModSearch returns a list of search QueryMod based on the struct values
 func QueryModSearch(input interface{}) []qm.QueryMod {
 	mods := []qm.QueryMod{}
+	if reflect.ValueOf(input).IsNil() {
+		return mods
+	}
 	// Get reflect value
 	v := reflect.ValueOf(input).Elem()
 	// Iterate struct fields
