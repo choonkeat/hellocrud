@@ -16,29 +16,6 @@ import (
 	"github.com/volatiletech/sqlboiler/queries/qm"
 )
 
-// SchemaTypePost is the GraphQL schema type for Post
-var SchemaTypePost = `
-# Post is a resource type
-type Post {
-	
-		# Convenient GUID for ReactJS component @key attribute
-		rowId: String!
-		id: ID!
-		title: String!
-		author: String!
-		body: String!
-		notes: String
-		createdAt: Time
-		updatedAt: Time
-		# comments has a many-to-one relationship with Post
-		comments: CommentsCollection
-}
-
-type PostsCollection {
-	nodes: [Post!]!
-}
-`
-
 // NewPost returns a new Post instance
 func NewPost(db boil.Executor, model dbmodel.Post) Post {
 	return Post{
@@ -134,18 +111,6 @@ func (c PostsCollection) Nodes(ctx context.Context) []Post {
 	return c.nodes
 }
 
-// SchemaCreatePostInput is the schema create input for Post
-var SchemaCreatePostInput = `
-# CreatePostInput is a create input type for Post resource
-input CreatePostInput {
-	
-	  title: String!
-	  author: String!
-	  body: String!
-	  notes: String
-}
-`
-
 // createPostInput is an object to back Post mutation (create) input type
 type createPostInput struct {
 	Title  string  `json:"title"`
@@ -154,16 +119,6 @@ type createPostInput struct {
 	Notes  *string `json:"notes"`
 }
 
-// SchemaUpdatePostInput is the schema update input for Post
-var SchemaUpdatePostInput = `
-input UpdatePostInput {
-	  title: String!
-	  author: String!
-	  body: String!
-	  notes: String
-}
-`
-
 // updatePostInput is an object to back Post mutation (update) input type
 type updatePostInput struct {
 	Title  string  `json:"title"`
@@ -171,18 +126,6 @@ type updatePostInput struct {
 	Body   string  `json:"body"`
 	Notes  *string `json:"notes"`
 }
-
-// SchemaSearchPostInput is the schema search input for Post
-var SchemaSearchPostInput = `
-# SearchPostInput is a search input/arguments type for Post resources
-input SearchPostInput {
-	
-	  title: String
-	  author: String
-	  body: String
-	  notes: String
-}
-`
 
 // searchPostInput is an object to back Post search arguments input type
 type searchPostInput struct {

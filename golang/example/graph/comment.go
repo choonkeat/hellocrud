@@ -16,29 +16,6 @@ import (
 	"github.com/volatiletech/sqlboiler/queries/qm"
 )
 
-// SchemaTypeComment is the GraphQL schema type for Comment
-var SchemaTypeComment = `
-# Comment is a resource type
-type Comment {
-	
-		# Convenient GUID for ReactJS component @key attribute
-		rowId: String!
-		id: ID!
-		postID: Int!
-		author: String!
-		body: String!
-		notes: String
-		createdAt: Time
-		updatedAt: Time
-		# post has a foreign key pointing to Comment
-		post: Post
-}
-
-type CommentsCollection {
-	nodes: [Comment!]!
-}
-`
-
 // NewComment returns a new Comment instance
 func NewComment(db boil.Executor, model dbmodel.Comment) Comment {
 	return Comment{
@@ -132,18 +109,6 @@ func (c CommentsCollection) Nodes(ctx context.Context) []Comment {
 	return c.nodes
 }
 
-// SchemaCreateCommentInput is the schema create input for Comment
-var SchemaCreateCommentInput = `
-# CreateCommentInput is a create input type for Comment resource
-input CreateCommentInput {
-	
-	  postID: Int!
-	  author: String!
-	  body: String!
-	  notes: String
-}
-`
-
 // createCommentInput is an object to back Comment mutation (create) input type
 type createCommentInput struct {
 	PostID int32   `json:"post_id"`
@@ -152,16 +117,6 @@ type createCommentInput struct {
 	Notes  *string `json:"notes"`
 }
 
-// SchemaUpdateCommentInput is the schema update input for Comment
-var SchemaUpdateCommentInput = `
-input UpdateCommentInput {
-	  postID: Int!
-	  author: String!
-	  body: String!
-	  notes: String
-}
-`
-
 // updateCommentInput is an object to back Comment mutation (update) input type
 type updateCommentInput struct {
 	PostID int32   `json:"post_id"`
@@ -169,18 +124,6 @@ type updateCommentInput struct {
 	Body   string  `json:"body"`
 	Notes  *string `json:"notes"`
 }
-
-// SchemaSearchCommentInput is the schema search input for Comment
-var SchemaSearchCommentInput = `
-# SearchCommentInput is a search input/arguments type for Comment resources
-input SearchCommentInput {
-	
-	  postID: Int
-	  author: String
-	  body: String
-	  notes: String
-}
-`
 
 // searchCommentInput is an object to back Comment search arguments input type
 type searchCommentInput struct {
