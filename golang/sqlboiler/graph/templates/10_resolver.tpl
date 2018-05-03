@@ -32,6 +32,12 @@ func (r *Resolver) Search{{$modelNamePlural}}(ctx context.Context, args struct {
 		qm.Load("{{$txt.Function.Name}}"),
 		{{- end }}
 	}
+	// Role-based Access Control
+	perms, err := AssertPermissions(ctx, "search", "{{$modelName}}", args, &args.Input)
+	if err != nil {
+		return result, errors.Wrapf(err, "permission denied")
+	}
+	mods = append(mods, perms...)
 
 	// Pagination
 	mods = append(mods, QueryModPagination(args.SinceID, args.PageNumber, args.PageSize)...)
@@ -90,6 +96,12 @@ func (r *Resolver) {{$modelName}}ByID(ctx context.Context, args struct {
 		qm.Load("{{$txt.Function.Name}}"),
 		{{- end -}}
 	}
+	// Role-based Access Control
+	perms, err := AssertPermissions(ctx, "read", "{{$modelName}}", args, nil)
+	if err != nil {
+		return result, errors.Wrapf(err, "permission denied")
+	}
+	mods = append(mods, perms...)
 
 	m, err := dbmodel.{{$modelNamePlural}}(r.db(ctx), mods...).One()
 	if err != nil {
@@ -105,9 +117,13 @@ func (r *Resolver) Create{{$modelName}}(ctx context.Context, args struct {
 	Input create{{$modelName}}Input
 }) ({{$modelName}}, error) {
 	result := {{$modelName}}{}
-	m := dbmodel.{{$modelName}}{
+	m := dbmodel.{{$modelName}}{}
 
+	// Role-based Access Control
+	if _, err := AssertPermissions(ctx, "create", "{{$modelName}}", args, &args.Input); err != nil {
+		return result, errors.Wrapf(err, "permission denied")
 	}
+
 	data, err := json.Marshal(args.Input)
 	if err != nil {
 		return result, errors.Wrapf(err, "json.Marshal(%#v)", args.Input)
@@ -143,7 +159,18 @@ func (r *Resolver) Update{{$modelName}}ByID(ctx context.Context, args struct {
 	{{- end -}}
 	{{- end}}
 
-	m, err := dbmodel.Find{{$modelName}}(r.db(ctx), id)
+	mods := []qm.QueryMod{
+		qm.Where("id = ?", id),
+	}
+
+	// Role-based Access Control
+	perms, err := AssertPermissions(ctx, "update", "{{$modelName}}", args, &args.Input)
+	if err != nil {
+		return result, errors.Wrapf(err, "permission denied")
+	}
+	mods = append(mods, perms...)
+
+	m, err := dbmodel.{{$modelNamePlural}}(r.db(ctx), mods...).One()
 	if err != nil {
 		return result, errors.Wrapf(err, "update{{$modelName}}ByID(%#v)", args)
 	} else if m == nil {
@@ -183,7 +210,18 @@ func (r *Resolver) Delete{{$modelName}}ByID(ctx context.Context, args struct {
 	{{- end -}}
 	{{- end}}
 
-	m, err := dbmodel.Find{{$modelName}}(r.db(ctx), id)
+	mods := []qm.QueryMod{
+		qm.Where("id = ?", id),
+	}
+
+	// Role-based Access Control
+	perms, err := AssertPermissions(ctx, "delete", "{{$modelName}}", args, nil)
+	if err != nil {
+		return result, errors.Wrapf(err, "permission denied")
+	}
+	mods = append(mods, perms...)
+
+	m, err := dbmodel.{{$modelNamePlural}}(r.db(ctx), mods...).One()
 	if err != nil {
 		return result, errors.Wrapf(err, "update{{$modelName}}ByID(%#v)", args)
 	} else if m == nil {

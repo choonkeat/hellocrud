@@ -150,6 +150,12 @@ func (r *Resolver) SearchPosts(ctx context.Context, args struct {
 		// TODO: Add eager loading based on requested fields
 		qm.Load("Comments"),
 	}
+	// Role-based Access Control
+	perms, err := AssertPermissions(ctx, "search", "Post", args, &args.Input)
+	if err != nil {
+		return result, errors.Wrapf(err, "permission denied")
+	}
+	mods = append(mods, perms...)
 
 	// Pagination
 	mods = append(mods, QueryModPagination(args.SinceID, args.PageNumber, args.PageSize)...)
@@ -184,6 +190,12 @@ func (r *Resolver) PostByID(ctx context.Context, args struct {
 		qm.Where("id = ?", id),
 		// TODO: Add eager loading based on requested fields
 		qm.Load("Comments")}
+	// Role-based Access Control
+	perms, err := AssertPermissions(ctx, "read", "Post", args, nil)
+	if err != nil {
+		return result, errors.Wrapf(err, "permission denied")
+	}
+	mods = append(mods, perms...)
 
 	m, err := dbmodel.Posts(r.db(ctx), mods...).One()
 	if err != nil {
@@ -200,6 +212,12 @@ func (r *Resolver) CreatePost(ctx context.Context, args struct {
 }) (Post, error) {
 	result := Post{}
 	m := dbmodel.Post{}
+
+	// Role-based Access Control
+	if _, err := AssertPermissions(ctx, "create", "Post", args, &args.Input); err != nil {
+		return result, errors.Wrapf(err, "permission denied")
+	}
+
 	data, err := json.Marshal(args.Input)
 	if err != nil {
 		return result, errors.Wrapf(err, "json.Marshal(%#v)", args.Input)
@@ -226,7 +244,18 @@ func (r *Resolver) UpdatePostByID(ctx context.Context, args struct {
 	}
 	id := int(i)
 
-	m, err := dbmodel.FindPost(r.db(ctx), id)
+	mods := []qm.QueryMod{
+		qm.Where("id = ?", id),
+	}
+
+	// Role-based Access Control
+	perms, err := AssertPermissions(ctx, "update", "Post", args, &args.Input)
+	if err != nil {
+		return result, errors.Wrapf(err, "permission denied")
+	}
+	mods = append(mods, perms...)
+
+	m, err := dbmodel.Posts(r.db(ctx), mods...).One()
 	if err != nil {
 		return result, errors.Wrapf(err, "updatePostByID(%#v)", args)
 	} else if m == nil {
@@ -257,7 +286,18 @@ func (r *Resolver) DeletePostByID(ctx context.Context, args struct {
 	}
 	id := int(i)
 
-	m, err := dbmodel.FindPost(r.db(ctx), id)
+	mods := []qm.QueryMod{
+		qm.Where("id = ?", id),
+	}
+
+	// Role-based Access Control
+	perms, err := AssertPermissions(ctx, "delete", "Post", args, nil)
+	if err != nil {
+		return result, errors.Wrapf(err, "permission denied")
+	}
+	mods = append(mods, perms...)
+
+	m, err := dbmodel.Posts(r.db(ctx), mods...).One()
 	if err != nil {
 		return result, errors.Wrapf(err, "updatePostByID(%#v)", args)
 	} else if m == nil {
