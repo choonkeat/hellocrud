@@ -158,13 +158,13 @@ func (r *Resolver) SearchPosts(ctx context.Context, args struct {
 	mods = append(mods, QueryModSearch(args.Input)...)
 
 	// Retrieve model/s based on search criteria
-	slice, err := dbmodel.Posts(r.db, mods...).All()
+	slice, err := dbmodel.Posts(r.db(ctx), mods...).All()
 	if err != nil {
 		return result, errors.Wrapf(err, "searchPosts(%#v)", args)
 	}
 
 	// Convert to GraphQL type resolver
-	result = NewPostsCollection(r.db, slice)
+	result = NewPostsCollection(r.db(ctx), slice)
 
 	return result, nil
 }
@@ -185,13 +185,13 @@ func (r *Resolver) PostByID(ctx context.Context, args struct {
 		// TODO: Add eager loading based on requested fields
 		qm.Load("Comments")}
 
-	m, err := dbmodel.Posts(r.db, mods...).One()
+	m, err := dbmodel.Posts(r.db(ctx), mods...).One()
 	if err != nil {
 		return result, errors.Wrapf(err, "PostByID(%#v)", args)
 	} else if m == nil {
 		return result, errors.New("not found")
 	}
-	return Post{model: *m, db: r.db}, nil
+	return Post{model: *m, db: r.db(ctx)}, nil
 }
 
 // CreatePost creates a Post based on the provided input
@@ -208,10 +208,10 @@ func (r *Resolver) CreatePost(ctx context.Context, args struct {
 		return result, errors.Wrapf(err, "json.Unmarshal(%s)", data)
 	}
 
-	if err := m.Insert(r.db); err != nil {
+	if err := m.Insert(r.db(ctx)); err != nil {
 		return result, errors.Wrapf(err, "createPost(%#v)", m)
 	}
-	return Post{model: m, db: r.db}, nil
+	return Post{model: m, db: r.db(ctx)}, nil
 }
 
 // UpdatePostByID updates a Post based on the provided ID and input
@@ -226,7 +226,7 @@ func (r *Resolver) UpdatePostByID(ctx context.Context, args struct {
 	}
 	id := int(i)
 
-	m, err := dbmodel.FindPost(r.db, id)
+	m, err := dbmodel.FindPost(r.db(ctx), id)
 	if err != nil {
 		return result, errors.Wrapf(err, "updatePostByID(%#v)", args)
 	} else if m == nil {
@@ -240,10 +240,10 @@ func (r *Resolver) UpdatePostByID(ctx context.Context, args struct {
 		return result, errors.Wrapf(err, "json.Unmarshal(%s)", data)
 	}
 
-	if err := m.Update(r.db); err != nil {
+	if err := m.Update(r.db(ctx)); err != nil {
 		return result, errors.Wrapf(err, "updatePost(%#v)", m)
 	}
-	return Post{model: *m, db: r.db}, nil
+	return Post{model: *m, db: r.db(ctx)}, nil
 }
 
 // DeletePostByID deletes a Post based on the provided ID
@@ -257,14 +257,14 @@ func (r *Resolver) DeletePostByID(ctx context.Context, args struct {
 	}
 	id := int(i)
 
-	m, err := dbmodel.FindPost(r.db, id)
+	m, err := dbmodel.FindPost(r.db(ctx), id)
 	if err != nil {
 		return result, errors.Wrapf(err, "updatePostByID(%#v)", args)
 	} else if m == nil {
 		return result, errors.New("not found")
 	}
-	if err := m.Delete(r.db); err != nil {
+	if err := m.Delete(r.db(ctx)); err != nil {
 		return result, errors.Wrapf(err, "deletePostByID(%#v)", m)
 	}
-	return Post{model: *m, db: r.db}, nil
+	return Post{model: *m, db: r.db(ctx)}, nil
 }
