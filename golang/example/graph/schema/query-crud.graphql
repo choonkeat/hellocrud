@@ -1,0 +1,22 @@
+searchComments(
+  sinceID: ID
+  pageNumber: Int
+  pageSize: Int
+  input: SearchCommentInput
+): CommentsCollection!
+
+commentByID(
+  id: ID!
+): Comment!
+
+searchPosts(
+  sinceID: ID
+  pageNumber: Int
+  pageSize: Int
+  input: SearchPostInput
+): PostsCollection!
+
+postByID(
+  id: ID!
+): Post!
+

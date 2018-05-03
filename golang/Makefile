@@ -4,7 +4,7 @@ DEBUG  = 1
 run: generate
 	env DEBUG=$(DEBUG) DATABASE_URL=$(DATABASE_URL) go run example/main.go
 
-generate: dbmigrate generate-golang generate-js
+generate: dbmigrate generate-golang generate-graphql-schema generate-js
 
 generate-golang: dbenv
 	# 2. generate db orm
@@ -13,6 +13,10 @@ generate-golang: dbenv
 	sqlboiler --output example/graph   --pkgname graph   --schema app --basedir sqlboiler/graph $(DBTYPE)
 	# 4. clean up generated go code
 	goimports -w example/*.go example/graph/*.go example/dbmodel/*.go
+
+generate-graphql-schema: dbenv
+	sqlboiler --output example/graph/schema --pkgname schema --schema app --basedir sqlboiler/graphqlschema $(DBTYPE)
+	go run cmd/sqlboiler2other/main.go -basedir example/graph/schema -ext graphql
 
 generate-js: dbenv
 	# 5. generate react+apollo crud
