@@ -19,4 +19,3 @@ searchPosts(
 postByID(
   id: ID!
 ): Post!
-

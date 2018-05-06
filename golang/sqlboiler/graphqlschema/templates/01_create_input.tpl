@@ -3,7 +3,7 @@
 {{- $modelNameCamel := $tableNameSingular | camelCase -}}
 {{- $pkColNames := .Table.PKey.Columns -}}
 
-var _ = `
+/*sqlboiler2other
 # Create{{$modelName}}Input is a create input type for {{$modelName}} resource
 input Create{{$modelName}}Input {
 	{{range $column := .Table.Columns }}
@@ -57,4 +57,4 @@ input Create{{$modelName}}Input {
 	{{- end -}}
 	{{- end }}
 }
-`
+sqlboiler2other*/

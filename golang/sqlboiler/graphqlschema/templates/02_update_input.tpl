@@ -3,7 +3,7 @@
 {{- $modelNameCamel := $tableNameSingular | camelCase -}}
 {{- $pkColNames := .Table.PKey.Columns -}}
 
-var _ = `
+/*sqlboiler2other
 input Update{{$modelName}}Input {
 	{{- range $column := .Table.Columns }}
 	{{- if containsAny $pkColNames $column.Name }}
@@ -56,4 +56,4 @@ input Update{{$modelName}}Input {
 	{{- end -}}
 	{{- end }}
 }
-`
+sqlboiler2other*/

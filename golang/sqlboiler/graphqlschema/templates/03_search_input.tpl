@@ -3,7 +3,7 @@
 {{- $modelNameCamel := $tableNameSingular | camelCase -}}
 {{- $pkColNames := .Table.PKey.Columns -}}
 
-var _ = `
+/*sqlboiler2other
 # Search{{$modelName}}Input is a search input/arguments type for {{$modelName}} resources
 input Search{{$modelName}}Input {
 	{{range $column := .Table.Columns }}
@@ -57,4 +57,4 @@ input Search{{$modelName}}Input {
 	{{- end -}}
 	{{- end }}
 }
-`
+sqlboiler2other*/

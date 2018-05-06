@@ -1,6 +1,6 @@
 # Comment is a resource type
 type Comment {
-	
+
 		# Convenient GUID for ReactJS component @key attribute
 		rowId: String!
 		id: ID!
@@ -20,7 +20,7 @@ type CommentsCollection {
 
 # CreateCommentInput is a create input type for Comment resource
 input CreateCommentInput {
-	
+
 	  postID: Int!
 	  author: String!
 	  body: String!
@@ -36,7 +36,7 @@ input UpdateCommentInput {
 
 # SearchCommentInput is a search input/arguments type for Comment resources
 input SearchCommentInput {
-	
+
 	  postID: Int
 	  author: String
 	  body: String

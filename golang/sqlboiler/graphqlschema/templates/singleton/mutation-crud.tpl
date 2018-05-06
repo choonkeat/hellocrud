@@ -1,4 +1,4 @@
-var _ = `
+/*sqlboiler2other
 {{range $table := .Tables}}
 {{- $tableNameSingular := .Name | singular -}}
 {{- $modelName := $tableNameSingular | titleCase -}}
@@ -17,4 +17,4 @@ delete{{$modelName}}ByID(
   id: ID!
 ): {{$modelName}}!
 {{end}}
-`
+sqlboiler2other*/

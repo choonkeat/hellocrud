@@ -10,8 +10,10 @@ import (
 )
 
 var (
-	basedir string
-	ext     string
+	basedir          string
+	ext              string
+	startPlaceholder = "/*sqlboiler2other\n"
+	endPlaceholder   = "sqlboiler2other*/"
 )
 
 func main() {
@@ -34,17 +36,20 @@ func main() {
 		os.Remove(p)
 
 		s := string(data)
-		parts := strings.SplitN(s, "var _ = `", 2)
-		if len(parts) == 1 {
+		// Find index of start of actual content
+		start := strings.Index(s, startPlaceholder)
+		if start == -1 {
 			continue
 		}
-		s = parts[1]
-		s = strings.TrimSpace(s)
-		s = strings.TrimSuffix(s, "`")
-		s = strings.Replace(s, "\n\n\n", "\n\n", -1)
-		parts = strings.Split(s, "`\nvar _ = `")
 
-		if err := ioutil.WriteFile(strings.Replace(p, ".go", "."+ext, 1), []byte(strings.Join(parts, "")), 0660); err != nil {
+		// Slice content from start index
+		s = s[start+len(startPlaceholder) : len(s)]
+		// Remove all /* */
+		s = strings.Replace(s, startPlaceholder, "", -1)
+		s = strings.Replace(s, endPlaceholder, "", -1)
+		s = strings.TrimSpace(s) + "\n"
+
+		if err := ioutil.WriteFile(strings.Replace(p, ".go", "."+ext, 1), []byte(s), 0660); err != nil {
 			log.Fatal(err, p)
 		}
 	}

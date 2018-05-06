@@ -1,6 +1,6 @@
 # Post is a resource type
 type Post {
-	
+
 		# Convenient GUID for ReactJS component @key attribute
 		rowId: String!
 		id: ID!
@@ -20,7 +20,7 @@ type PostsCollection {
 
 # CreatePostInput is a create input type for Post resource
 input CreatePostInput {
-	
+
 	  title: String!
 	  author: String!
 	  body: String!
@@ -36,7 +36,7 @@ input UpdatePostInput {
 
 # SearchPostInput is a search input/arguments type for Post resources
 input SearchPostInput {
-	
+
 	  title: String
 	  author: String
 	  body: String

@@ -6,7 +6,7 @@
 {{- $pkColNames := .Table.PKey.Columns -}}
 {{- $fkColDefs := .Table.FKeys -}}
 
-var _ = `
+/*sqlboiler2other
 # {{$modelName}} is a resource type
 type {{$modelName}} {
 	{{range $column := .Table.Columns }}
@@ -78,4 +78,4 @@ type {{$modelName}} {
 type {{$modelNamePlural}}Collection {
 	nodes: [{{$modelName}}!]!
 }
-`
+sqlboiler2other*/
