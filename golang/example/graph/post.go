@@ -16,29 +16,6 @@ import (
 	"github.com/volatiletech/sqlboiler/queries/qm"
 )
 
-// SchemaTypePost is the GraphQL schema type for Post
-var SchemaTypePost = `
-# Post is a resource type
-type Post {
-	
-		# Convenient GUID for ReactJS component @key attribute
-		rowId: String!
-		id: ID!
-		title: String!
-		author: String!
-		body: String!
-		notes: String
-		createdAt: Time
-		updatedAt: Time
-		# comments has a many-to-one relationship with Post
-		comments: CommentsCollection
-}
-
-type PostsCollection {
-	nodes: [Post!]!
-}
-`
-
 // NewPost returns a new Post instance
 func NewPost(db boil.Executor, model dbmodel.Post) Post {
 	return Post{
@@ -134,18 +111,6 @@ func (c PostsCollection) Nodes(ctx context.Context) []Post {
 	return c.nodes
 }
 
-// SchemaCreatePostInput is the schema create input for Post
-var SchemaCreatePostInput = `
-# CreatePostInput is a create input type for Post resource
-input CreatePostInput {
-	
-	  title: String!
-	  author: String!
-	  body: String!
-	  notes: String
-}
-`
-
 // createPostInput is an object to back Post mutation (create) input type
 type createPostInput struct {
 	Title  string  `json:"title"`
@@ -154,16 +119,6 @@ type createPostInput struct {
 	Notes  *string `json:"notes"`
 }
 
-// SchemaUpdatePostInput is the schema update input for Post
-var SchemaUpdatePostInput = `
-input UpdatePostInput {
-	  title: String!
-	  author: String!
-	  body: String!
-	  notes: String
-}
-`
-
 // updatePostInput is an object to back Post mutation (update) input type
 type updatePostInput struct {
 	Title  string  `json:"title"`
@@ -171,18 +126,6 @@ type updatePostInput struct {
 	Body   string  `json:"body"`
 	Notes  *string `json:"notes"`
 }
-
-// SchemaSearchPostInput is the schema search input for Post
-var SchemaSearchPostInput = `
-# SearchPostInput is a search input/arguments type for Post resources
-input SearchPostInput {
-	
-	  title: String
-	  author: String
-	  body: String
-	  notes: String
-}
-`
 
 // searchPostInput is an object to back Post search arguments input type
 type searchPostInput struct {
@@ -207,6 +150,12 @@ func (r *Resolver) SearchPosts(ctx context.Context, args struct {
 		// TODO: Add eager loading based on requested fields
 		qm.Load("Comments"),
 	}
+	// Role-based Access Control
+	perms, err := AssertPermissions(ctx, "search", "Post", args, &args.Input)
+	if err != nil {
+		return result, errors.Wrapf(err, "permission denied")
+	}
+	mods = append(mods, perms...)
 
 	// Pagination
 	mods = append(mods, QueryModPagination(args.SinceID, args.PageNumber, args.PageSize)...)
@@ -215,13 +164,13 @@ func (r *Resolver) SearchPosts(ctx context.Context, args struct {
 	mods = append(mods, QueryModSearch(args.Input)...)
 
 	// Retrieve model/s based on search criteria
-	slice, err := dbmodel.Posts(r.db, mods...).All()
+	slice, err := dbmodel.Posts(r.db(ctx), mods...).All()
 	if err != nil {
 		return result, errors.Wrapf(err, "searchPosts(%#v)", args)
 	}
 
 	// Convert to GraphQL type resolver
-	result = NewPostsCollection(r.db, slice)
+	result = NewPostsCollection(r.db(ctx), slice)
 
 	return result, nil
 }
@@ -241,14 +190,20 @@ func (r *Resolver) PostByID(ctx context.Context, args struct {
 		qm.Where("id = ?", id),
 		// TODO: Add eager loading based on requested fields
 		qm.Load("Comments")}
+	// Role-based Access Control
+	perms, err := AssertPermissions(ctx, "read", "Post", args, nil)
+	if err != nil {
+		return result, errors.Wrapf(err, "permission denied")
+	}
+	mods = append(mods, perms...)
 
-	m, err := dbmodel.Posts(r.db, mods...).One()
+	m, err := dbmodel.Posts(r.db(ctx), mods...).One()
 	if err != nil {
 		return result, errors.Wrapf(err, "PostByID(%#v)", args)
 	} else if m == nil {
 		return result, errors.New("not found")
 	}
-	return Post{model: *m, db: r.db}, nil
+	return Post{model: *m, db: r.db(ctx)}, nil
 }
 
 // CreatePost creates a Post based on the provided input
@@ -257,6 +212,12 @@ func (r *Resolver) CreatePost(ctx context.Context, args struct {
 }) (Post, error) {
 	result := Post{}
 	m := dbmodel.Post{}
+
+	// Role-based Access Control
+	if _, err := AssertPermissions(ctx, "create", "Post", args, &args.Input); err != nil {
+		return result, errors.Wrapf(err, "permission denied")
+	}
+
 	data, err := json.Marshal(args.Input)
 	if err != nil {
 		return result, errors.Wrapf(err, "json.Marshal(%#v)", args.Input)
@@ -265,10 +226,10 @@ func (r *Resolver) CreatePost(ctx context.Context, args struct {
 		return result, errors.Wrapf(err, "json.Unmarshal(%s)", data)
 	}
 
-	if err := m.Insert(r.db); err != nil {
+	if err := m.Insert(r.db(ctx)); err != nil {
 		return result, errors.Wrapf(err, "createPost(%#v)", m)
 	}
-	return Post{model: m, db: r.db}, nil
+	return Post{model: m, db: r.db(ctx)}, nil
 }
 
 // UpdatePostByID updates a Post based on the provided ID and input
@@ -283,7 +244,18 @@ func (r *Resolver) UpdatePostByID(ctx context.Context, args struct {
 	}
 	id := int(i)
 
-	m, err := dbmodel.FindPost(r.db, id)
+	mods := []qm.QueryMod{
+		qm.Where("id = ?", id),
+	}
+
+	// Role-based Access Control
+	perms, err := AssertPermissions(ctx, "update", "Post", args, &args.Input)
+	if err != nil {
+		return result, errors.Wrapf(err, "permission denied")
+	}
+	mods = append(mods, perms...)
+
+	m, err := dbmodel.Posts(r.db(ctx), mods...).One()
 	if err != nil {
 		return result, errors.Wrapf(err, "updatePostByID(%#v)", args)
 	} else if m == nil {
@@ -297,10 +269,10 @@ func (r *Resolver) UpdatePostByID(ctx context.Context, args struct {
 		return result, errors.Wrapf(err, "json.Unmarshal(%s)", data)
 	}
 
-	if err := m.Update(r.db); err != nil {
+	if err := m.Update(r.db(ctx)); err != nil {
 		return result, errors.Wrapf(err, "updatePost(%#v)", m)
 	}
-	return Post{model: *m, db: r.db}, nil
+	return Post{model: *m, db: r.db(ctx)}, nil
 }
 
 // DeletePostByID deletes a Post based on the provided ID
@@ -314,14 +286,25 @@ func (r *Resolver) DeletePostByID(ctx context.Context, args struct {
 	}
 	id := int(i)
 
-	m, err := dbmodel.FindPost(r.db, id)
+	mods := []qm.QueryMod{
+		qm.Where("id = ?", id),
+	}
+
+	// Role-based Access Control
+	perms, err := AssertPermissions(ctx, "delete", "Post", args, nil)
+	if err != nil {
+		return result, errors.Wrapf(err, "permission denied")
+	}
+	mods = append(mods, perms...)
+
+	m, err := dbmodel.Posts(r.db(ctx), mods...).One()
 	if err != nil {
 		return result, errors.Wrapf(err, "updatePostByID(%#v)", args)
 	} else if m == nil {
 		return result, errors.New("not found")
 	}
-	if err := m.Delete(r.db); err != nil {
+	if err := m.Delete(r.db(ctx)); err != nil {
 		return result, errors.Wrapf(err, "deletePostByID(%#v)", m)
 	}
-	return Post{model: *m, db: r.db}, nil
+	return Post{model: *m, db: r.db(ctx)}, nil
 }

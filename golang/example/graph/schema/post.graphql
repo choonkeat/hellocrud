@@ -1,0 +1,44 @@
+# Post is a resource type
+type Post {
+
+		# Convenient GUID for ReactJS component @key attribute
+		rowId: String!
+		id: ID!
+		title: String!
+		author: String!
+		body: String!
+		notes: String
+		createdAt: Time
+		updatedAt: Time
+		# comments has a many-to-one relationship with Post
+		comments: CommentsCollection
+}
+
+type PostsCollection {
+	nodes: [Post!]!
+}
+
+# CreatePostInput is a create input type for Post resource
+input CreatePostInput {
+
+	  title: String!
+	  author: String!
+	  body: String!
+	  notes: String
+}
+
+input UpdatePostInput {
+	  title: String!
+	  author: String!
+	  body: String!
+	  notes: String
+}
+
+# SearchPostInput is a search input/arguments type for Post resources
+input SearchPostInput {
+
+	  title: String
+	  author: String
+	  body: String
+	  notes: String
+}

@@ -14,7 +14,7 @@ import (
 
 // Resolver is the root GraphQL resolver
 type Resolver struct {
-	db boil.Executor
+	sqldb *sql.DB
 }
 
 // NewResolver returns a new root GraphQL resolver
@@ -29,5 +29,5 @@ func NewResolver(databaseURL string) (*Resolver, error) {
 	}
 
 	boil.DebugMode = (os.Getenv("DEBUG") != "")
-	return &Resolver{db: db}, nil
+	return &Resolver{sqldb: db}, nil
 }

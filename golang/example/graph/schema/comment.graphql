@@ -1,0 +1,44 @@
+# Comment is a resource type
+type Comment {
+
+		# Convenient GUID for ReactJS component @key attribute
+		rowId: String!
+		id: ID!
+		postID: Int!
+		author: String!
+		body: String!
+		notes: String
+		createdAt: Time
+		updatedAt: Time
+		# post has a foreign key pointing to Comment
+		post: Post
+}
+
+type CommentsCollection {
+	nodes: [Comment!]!
+}
+
+# CreateCommentInput is a create input type for Comment resource
+input CreateCommentInput {
+
+	  postID: Int!
+	  author: String!
+	  body: String!
+	  notes: String
+}
+
+input UpdateCommentInput {
+	  postID: Int!
+	  author: String!
+	  body: String!
+	  notes: String
+}
+
+# SearchCommentInput is a search input/arguments type for Comment resources
+input SearchCommentInput {
+
+	  postID: Int
+	  author: String
+	  body: String
+	  notes: String
+}

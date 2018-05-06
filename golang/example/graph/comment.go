@@ -16,29 +16,6 @@ import (
 	"github.com/volatiletech/sqlboiler/queries/qm"
 )
 
-// SchemaTypeComment is the GraphQL schema type for Comment
-var SchemaTypeComment = `
-# Comment is a resource type
-type Comment {
-	
-		# Convenient GUID for ReactJS component @key attribute
-		rowId: String!
-		id: ID!
-		postID: Int!
-		author: String!
-		body: String!
-		notes: String
-		createdAt: Time
-		updatedAt: Time
-		# post has a foreign key pointing to Comment
-		post: Post
-}
-
-type CommentsCollection {
-	nodes: [Comment!]!
-}
-`
-
 // NewComment returns a new Comment instance
 func NewComment(db boil.Executor, model dbmodel.Comment) Comment {
 	return Comment{
@@ -132,18 +109,6 @@ func (c CommentsCollection) Nodes(ctx context.Context) []Comment {
 	return c.nodes
 }
 
-// SchemaCreateCommentInput is the schema create input for Comment
-var SchemaCreateCommentInput = `
-# CreateCommentInput is a create input type for Comment resource
-input CreateCommentInput {
-	
-	  postID: Int!
-	  author: String!
-	  body: String!
-	  notes: String
-}
-`
-
 // createCommentInput is an object to back Comment mutation (create) input type
 type createCommentInput struct {
 	PostID int32   `json:"post_id"`
@@ -152,16 +117,6 @@ type createCommentInput struct {
 	Notes  *string `json:"notes"`
 }
 
-// SchemaUpdateCommentInput is the schema update input for Comment
-var SchemaUpdateCommentInput = `
-input UpdateCommentInput {
-	  postID: Int!
-	  author: String!
-	  body: String!
-	  notes: String
-}
-`
-
 // updateCommentInput is an object to back Comment mutation (update) input type
 type updateCommentInput struct {
 	PostID int32   `json:"post_id"`
@@ -169,18 +124,6 @@ type updateCommentInput struct {
 	Body   string  `json:"body"`
 	Notes  *string `json:"notes"`
 }
-
-// SchemaSearchCommentInput is the schema search input for Comment
-var SchemaSearchCommentInput = `
-# SearchCommentInput is a search input/arguments type for Comment resources
-input SearchCommentInput {
-	
-	  postID: Int
-	  author: String
-	  body: String
-	  notes: String
-}
-`
 
 // searchCommentInput is an object to back Comment search arguments input type
 type searchCommentInput struct {
@@ -205,6 +148,12 @@ func (r *Resolver) SearchComments(ctx context.Context, args struct {
 		// TODO: Add eager loading based on requested fields
 		qm.Load("Post"),
 	}
+	// Role-based Access Control
+	perms, err := AssertPermissions(ctx, "search", "Comment", args, &args.Input)
+	if err != nil {
+		return result, errors.Wrapf(err, "permission denied")
+	}
+	mods = append(mods, perms...)
 
 	// Pagination
 	mods = append(mods, QueryModPagination(args.SinceID, args.PageNumber, args.PageSize)...)
@@ -213,13 +162,13 @@ func (r *Resolver) SearchComments(ctx context.Context, args struct {
 	mods = append(mods, QueryModSearch(args.Input)...)
 
 	// Retrieve model/s based on search criteria
-	slice, err := dbmodel.Comments(r.db, mods...).All()
+	slice, err := dbmodel.Comments(r.db(ctx), mods...).All()
 	if err != nil {
 		return result, errors.Wrapf(err, "searchComments(%#v)", args)
 	}
 
 	// Convert to GraphQL type resolver
-	result = NewCommentsCollection(r.db, slice)
+	result = NewCommentsCollection(r.db(ctx), slice)
 
 	return result, nil
 }
@@ -239,14 +188,20 @@ func (r *Resolver) CommentByID(ctx context.Context, args struct {
 		qm.Where("id = ?", id),
 		// TODO: Add eager loading based on requested fields
 		qm.Load("Post")}
+	// Role-based Access Control
+	perms, err := AssertPermissions(ctx, "read", "Comment", args, nil)
+	if err != nil {
+		return result, errors.Wrapf(err, "permission denied")
+	}
+	mods = append(mods, perms...)
 
-	m, err := dbmodel.Comments(r.db, mods...).One()
+	m, err := dbmodel.Comments(r.db(ctx), mods...).One()
 	if err != nil {
 		return result, errors.Wrapf(err, "CommentByID(%#v)", args)
 	} else if m == nil {
 		return result, errors.New("not found")
 	}
-	return Comment{model: *m, db: r.db}, nil
+	return Comment{model: *m, db: r.db(ctx)}, nil
 }
 
 // CreateComment creates a Comment based on the provided input
@@ -255,6 +210,12 @@ func (r *Resolver) CreateComment(ctx context.Context, args struct {
 }) (Comment, error) {
 	result := Comment{}
 	m := dbmodel.Comment{}
+
+	// Role-based Access Control
+	if _, err := AssertPermissions(ctx, "create", "Comment", args, &args.Input); err != nil {
+		return result, errors.Wrapf(err, "permission denied")
+	}
+
 	data, err := json.Marshal(args.Input)
 	if err != nil {
 		return result, errors.Wrapf(err, "json.Marshal(%#v)", args.Input)
@@ -263,10 +224,10 @@ func (r *Resolver) CreateComment(ctx context.Context, args struct {
 		return result, errors.Wrapf(err, "json.Unmarshal(%s)", data)
 	}
 
-	if err := m.Insert(r.db); err != nil {
+	if err := m.Insert(r.db(ctx)); err != nil {
 		return result, errors.Wrapf(err, "createComment(%#v)", m)
 	}
-	return Comment{model: m, db: r.db}, nil
+	return Comment{model: m, db: r.db(ctx)}, nil
 }
 
 // UpdateCommentByID updates a Comment based on the provided ID and input
@@ -281,7 +242,18 @@ func (r *Resolver) UpdateCommentByID(ctx context.Context, args struct {
 	}
 	id := int(i)
 
-	m, err := dbmodel.FindComment(r.db, id)
+	mods := []qm.QueryMod{
+		qm.Where("id = ?", id),
+	}
+
+	// Role-based Access Control
+	perms, err := AssertPermissions(ctx, "update", "Comment", args, &args.Input)
+	if err != nil {
+		return result, errors.Wrapf(err, "permission denied")
+	}
+	mods = append(mods, perms...)
+
+	m, err := dbmodel.Comments(r.db(ctx), mods...).One()
 	if err != nil {
 		return result, errors.Wrapf(err, "updateCommentByID(%#v)", args)
 	} else if m == nil {
@@ -295,10 +267,10 @@ func (r *Resolver) UpdateCommentByID(ctx context.Context, args struct {
 		return result, errors.Wrapf(err, "json.Unmarshal(%s)", data)
 	}
 
-	if err := m.Update(r.db); err != nil {
+	if err := m.Update(r.db(ctx)); err != nil {
 		return result, errors.Wrapf(err, "updateComment(%#v)", m)
 	}
-	return Comment{model: *m, db: r.db}, nil
+	return Comment{model: *m, db: r.db(ctx)}, nil
 }
 
 // DeleteCommentByID deletes a Comment based on the provided ID
@@ -312,14 +284,25 @@ func (r *Resolver) DeleteCommentByID(ctx context.Context, args struct {
 	}
 	id := int(i)
 
-	m, err := dbmodel.FindComment(r.db, id)
+	mods := []qm.QueryMod{
+		qm.Where("id = ?", id),
+	}
+
+	// Role-based Access Control
+	perms, err := AssertPermissions(ctx, "delete", "Comment", args, nil)
+	if err != nil {
+		return result, errors.Wrapf(err, "permission denied")
+	}
+	mods = append(mods, perms...)
+
+	m, err := dbmodel.Comments(r.db(ctx), mods...).One()
 	if err != nil {
 		return result, errors.Wrapf(err, "updateCommentByID(%#v)", args)
 	} else if m == nil {
 		return result, errors.New("not found")
 	}
-	if err := m.Delete(r.db); err != nil {
+	if err := m.Delete(r.db(ctx)); err != nil {
 		return result, errors.Wrapf(err, "deleteCommentByID(%#v)", m)
 	}
-	return Comment{model: *m, db: r.db}, nil
+	return Comment{model: *m, db: r.db(ctx)}, nil
 }

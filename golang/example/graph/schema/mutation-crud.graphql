@@ -1,0 +1,25 @@
+createComment(
+  input: CreateCommentInput!
+): Comment!
+
+updateCommentByID(
+  id: ID!
+  input: UpdateCommentInput!
+): Comment!
+
+deleteCommentByID(
+  id: ID!
+): Comment!
+
+createPost(
+  input: CreatePostInput!
+): Post!
+
+updatePostByID(
+  id: ID!
+  input: UpdatePostInput!
+): Post!
+
+deletePostByID(
+  id: ID!
+): Post!
