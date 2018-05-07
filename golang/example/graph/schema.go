@@ -18,7 +18,7 @@ var Schema string
 func init() {
 	var query strings.Builder
 	var mutation strings.Builder
-	var subscriptions strings.Builder
+	var subscription strings.Builder
 	var schema strings.Builder
 
 	matches, err := filepath.Glob("example/graph/schema/*.graphql")
@@ -38,22 +38,36 @@ func init() {
 		} else if strings.HasPrefix(basename, "mutation-") { // add your own `mutation-*.graphql` files
 			mutation.Write(data)
 		} else if strings.HasPrefix(basename, "subscription-") { // add your own `subscription-*.graphql` files
-			subscriptions.Write(data)
+			subscription.Write(data)
 		} else {
 			schema.Write(data)
 		}
 	}
 
+	operationFields := []string{}
+	operationTypes := []string{}
+	// Query
+	if strings.TrimSpace(query.String()) != "" {
+		operationFields = append(operationFields, "query: Query")
+		operationTypes = append(operationTypes, `type Query {`+query.String()+`}`)
+	}
+	// Mutation
+	if strings.TrimSpace(mutation.String()) != "" {
+		operationFields = append(operationFields, "mutation: Mutation")
+		operationTypes = append(operationTypes, `type Mutation {`+mutation.String()+`}`)
+	}
+	// Subscription
+	if strings.TrimSpace(subscription.String()) != "" {
+		operationFields = append(operationFields, "subscription: Subscription")
+		operationTypes = append(operationTypes, `type Subscription {`+subscription.String()+`}`)
+	}
+
 	Schema = `
-    schema {
-      query: Query
-      mutation: Mutation
-      subscription: Subscription
-    }
-    type Query {` + query.String() + `}
-    type Mutation {` + mutation.String() + `}
-    type Subscription {` + subscriptions.String() + `}
-  ` + schema.String()
+		schema {` +
+		strings.Join(operationFields, "\n") + // Operation fields associated to the types (i.e. query: Query, mutation: Mutation)
+		`}` +
+		strings.Join(operationTypes, "\n") + "\n" + // Operation types (i.e. type Query {}, type Mutation {})
+		schema.String() // Other schema types
 
 	graphql.MustParseSchema(Schema, &Resolver{})
 }
