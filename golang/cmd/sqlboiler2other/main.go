@@ -12,7 +12,7 @@ import (
 var (
 	basedir          string
 	ext              string
-	startPlaceholder = "/*sqlboiler2other\n"
+	startPlaceholder = "/*sqlboiler2other"
 	endPlaceholder   = "sqlboiler2other*/"
 )
 
