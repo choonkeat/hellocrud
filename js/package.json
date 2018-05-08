@@ -30,6 +30,7 @@
     "eject": "react-scripts eject"
   },
   "devDependencies": {
+    "create-react-app": "^1.5.2",
     "pg": "^7.4.1",
     "standard": "^11.0.1"
   }
