@@ -1,4 +1,5 @@
 /*sqlboiler2other
+
 {{- $dot := . -}}
 {{- $tableNameSingular := .Table.Name | singular -}}
 {{- $tableNamePlural := .Table.Name | plural -}}
