@@ -1,3 +1,5 @@
+import "github.com/pkg/errors"
+
 {{- $dot := . -}}
 {{- $tableNameSingular := .Table.Name | singular -}}
 {{- $modelName := $tableNameSingular | titleCase -}}

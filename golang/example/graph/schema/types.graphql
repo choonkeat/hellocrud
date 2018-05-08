@@ -1,2 +1,4 @@
+scalar Text
 scalar Time
 scalar Int64
+scalar Base64

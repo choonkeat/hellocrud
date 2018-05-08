@@ -8,7 +8,7 @@ import './App.css'
 {{- $modelName := $tableNameSingular | titleCase -}}
 {{- $modelNamePlural := $table.Name | plural | titleCase -}}
 {{- $modelNameCamel := $tableNameSingular | camelCase}}
-import {{ $modelName }} from './{{ $table.Name }}' // {{ $table.Name }}
+import {{ $modelName }} from './{{ $table.Name }}'
 {{- end }}
 import { Switch, Route } from 'react-router'
 import { ApolloProvider } from 'react-apollo'

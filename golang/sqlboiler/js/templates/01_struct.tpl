@@ -73,18 +73,18 @@ export class TupleForm extends React.Component {
             {current && current.rowId ? (<div>
               <input type='hidden' name='rowId' value={current.rowId} />
             </div>) : null}
-{{ range $column := .Table.Columns -}}
-{{ if eq $column.Name "created_at" -}}
-{{ else if eq $column.Name "updated_at" -}}
-{{ else if eq $column.Name "id" -}}
-{{ else -}}
+            {{ range $column := .Table.Columns -}}
+            {{ if eq $column.Name "created_at" -}}
+            {{ else if eq $column.Name "updated_at" -}}
+            {{ else if eq $column.Name "id" -}}
+            {{ else }}
             <div className='form-group row'>
               <label className='col-sm-2 col-form-label'>{{ $column.Name | camelCase }}</label>
               <Field className='form-control col-sm-10' name='{{ $column.Name | camelCase }}' component='input' type='text' placeholder='{{ $column.Name }}' />
               <small className='form-text text-muted offset-sm-2'>tip: {{ $column.Name | camelCase }}</small>
             </div>
-{{ end -}}
-{{ end -}}
+            {{ end -}}
+            {{ end }}
             <div className='form-group row'>
               <div className='offset-sm-2'>
                 <button className='btn btn-primary' type='submit' disabled={submitting || pristine}>Submit{submitting ? '...' : null}</button>
@@ -104,12 +104,12 @@ export const ShowTuple = ({ current }) => {
     <Link to='/{{ $tableNamePlural }}'>&larr; {{ $modelNamePlural }} </Link><h1 className='card-title'>{{ $modelName }} #{current.rowId}</h1>
     <table>
       <tbody>
-{{ range $column := .Table.Columns -}}
+        {{ range $column := .Table.Columns -}}
         <tr>
           <th>{{ $column.Name | camelCase }}</th>
           <td>{current.{{ $column.Name | camelCase }}}</td>
         </tr>
-{{ end -}}
+        {{ end }}
       </tbody>
     </table>
     <Link to={`/{{ $tableNamePlural }}/${current.id}/edit`}><button className='btn btn-secondary'>Edit</button></Link>
@@ -121,9 +121,9 @@ export const DeleteTuple = graphql(gql`
   mutation delete{{ $modelName }}ByID($id: ID!) {
     delete{{ $modelName }}ByID(id:$id) {
       rowId
-{{ range $column := .Table.Columns -}}
+      {{ range $column := .Table.Columns -}}
       {{ $column.Name | camelCase }}
-{{ end -}}
+      {{ end }}
     }
   }
 `, {name: 'delete{{ $modelName }}ByID'})(({ id, delete{{ $modelName }}ByID, search{{ $modelNamePlural }}Data }) => {
@@ -156,9 +156,9 @@ export const ListTuples = ({search{{ $modelNamePlural }}Data}) => {
     <table className='table table-hover'>
       <thead>
         <tr>
-{{ range $column := .Table.Columns -}}
+          {{ range $column := .Table.Columns -}}
           <th>{{ $column.Name | camelCase }}</th>
-{{ end -}}
+          {{ end }}
           <th />
           <th />
         </tr>
@@ -166,9 +166,9 @@ export const ListTuples = ({search{{ $modelNamePlural }}Data}) => {
       <tbody>
         {((search{{ $modelNamePlural }}Data.search{{ $modelNamePlural }} && search{{ $modelNamePlural }}Data.search{{ $modelNamePlural }}.nodes) || []).map(row => {
           return <tr key={row.rowId}>
-{{ range $column := .Table.Columns -}}
+            {{ range $column := .Table.Columns -}}
             <td><Link to={`/{{ $tableNamePlural }}/${row.id}`}>{row.{{ $column.Name | camelCase }}}</Link></td>
-{{ end -}}
+            {{ end }}
             <td><Link to={`/{{ $tableNamePlural }}/${row.id}/edit`}><button className='btn btn-secondary'>Edit</button></Link></td>
             <td><DeleteTuple id={row.id} search{{ $modelNamePlural }}Data={search{{ $modelNamePlural }}Data} /></td>
           </tr>
@@ -184,9 +184,9 @@ export const GetTuple = graphql(gql`
   query {{ $modelNameCamel }}($rowid: ID!){
     {{ $modelNameCamel }}ByID(id: $rowid) {
       rowId
-{{ range $column := .Table.Columns -}}
+      {{ range $column := .Table.Columns -}}
       {{ $column.Name | camelCase }}
-{{ end -}}
+      {{ end }}
     }
   }
 `)(({ loading, data, children }) => {
@@ -204,9 +204,9 @@ export const Create = graphql(gql`
   mutation create{{ $modelName }}($input: Create{{ $modelName }}Input!) {
     create{{ $modelName }}(input: $input) {
       rowId
-{{ range $column := .Table.Columns -}}
+      {{ range $column := .Table.Columns -}}
       {{ $column.Name | camelCase }}
-{{ end -}}
+      {{ end }}
     }
   }
 `, {name: 'create{{ $modelName }}'})(({current, history, search{{ $modelNamePlural }}Data, create{{ $modelName }}}) => {
@@ -217,9 +217,9 @@ export const Edit = graphql(gql`
   mutation update{{ $modelName }}ByID($id: ID!, $input: Update{{ $modelName }}Input!) {
     update{{ $modelName }}ByID(id: $id, input: $input) {
       rowId
-{{ range $column := .Table.Columns -}}
+      {{ range $column := .Table.Columns -}}
       {{ $column.Name | camelCase }}
-{{ end -}}
+      {{ end }}
     }
   }
 `, {name: 'update{{ $modelName }}ByID'})(({current, history, search{{ $modelNamePlural }}Data, update{{ $modelName }}ByID}) => {
@@ -231,9 +231,9 @@ export const Crud = graphql(gql`
     search{{ $modelNamePlural }}(pageSize: 30, input: $search) {
       nodes {
         rowId
-{{ range $column := .Table.Columns -}}
+        {{ range $column := .Table.Columns -}}
         {{ $column.Name | camelCase }}
-{{ end -}}
+        {{ end }}
       }
     }
   }

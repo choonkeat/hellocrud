@@ -63,26 +63,31 @@ export class TupleForm extends React.Component {
             {current && current.rowId ? (<div>
               <input type='hidden' name='rowId' value={current.rowId} />
             </div>) : null}
+
             <div className='form-group row'>
               <label className='col-sm-2 col-form-label'>title</label>
               <Field className='form-control col-sm-10' name='title' component='input' type='text' placeholder='title' />
               <small className='form-text text-muted offset-sm-2'>tip: title</small>
             </div>
+
             <div className='form-group row'>
               <label className='col-sm-2 col-form-label'>author</label>
               <Field className='form-control col-sm-10' name='author' component='input' type='text' placeholder='author' />
               <small className='form-text text-muted offset-sm-2'>tip: author</small>
             </div>
+
             <div className='form-group row'>
               <label className='col-sm-2 col-form-label'>body</label>
               <Field className='form-control col-sm-10' name='body' component='input' type='text' placeholder='body' />
               <small className='form-text text-muted offset-sm-2'>tip: body</small>
             </div>
+
             <div className='form-group row'>
               <label className='col-sm-2 col-form-label'>notes</label>
               <Field className='form-control col-sm-10' name='notes' component='input' type='text' placeholder='notes' />
               <small className='form-text text-muted offset-sm-2'>tip: notes</small>
             </div>
+
             <div className='form-group row'>
               <div className='offset-sm-2'>
                 <button className='btn btn-primary' type='submit' disabled={submitting || pristine}>Submit{submitting ? '...' : null}</button>
@@ -130,6 +135,7 @@ export const ShowTuple = ({ current }) => {
           <th>updatedAt</th>
           <td>{current.updatedAt}</td>
         </tr>
+
       </tbody>
     </table>
     <Link to={`/posts/${current.id}/edit`}><button className='btn btn-secondary'>Edit</button></Link>
@@ -148,6 +154,7 @@ export const DeleteTuple = graphql(gql`
       notes
       createdAt
       updatedAt
+
     }
   }
 `, {name: 'deletePostByID'})(({ id, deletePostByID, searchPostsData }) => {
@@ -187,6 +194,7 @@ export const ListTuples = ({searchPostsData}) => {
           <th>notes</th>
           <th>createdAt</th>
           <th>updatedAt</th>
+
           <th />
           <th />
         </tr>
@@ -201,6 +209,7 @@ export const ListTuples = ({searchPostsData}) => {
             <td><Link to={`/posts/${row.id}`}>{row.notes}</Link></td>
             <td><Link to={`/posts/${row.id}`}>{row.createdAt}</Link></td>
             <td><Link to={`/posts/${row.id}`}>{row.updatedAt}</Link></td>
+
             <td><Link to={`/posts/${row.id}/edit`}><button className='btn btn-secondary'>Edit</button></Link></td>
             <td><DeleteTuple id={row.id} searchPostsData={searchPostsData} /></td>
           </tr>
@@ -223,6 +232,7 @@ export const GetTuple = graphql(gql`
       notes
       createdAt
       updatedAt
+
     }
   }
 `)(({ loading, data, children }) => {
@@ -247,6 +257,7 @@ export const Create = graphql(gql`
       notes
       createdAt
       updatedAt
+
     }
   }
 `, {name: 'createPost'})(({current, history, searchPostsData, createPost}) => {
@@ -264,6 +275,7 @@ export const Edit = graphql(gql`
       notes
       createdAt
       updatedAt
+
     }
   }
 `, {name: 'updatePostByID'})(({current, history, searchPostsData, updatePostByID}) => {
@@ -282,6 +294,7 @@ export const Crud = graphql(gql`
         notes
         createdAt
         updatedAt
+
       }
     }
   }

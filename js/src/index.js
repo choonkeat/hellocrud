@@ -1,4 +1,3 @@
-/* global window */
 // const supportsHistory = 'pushState' in window.history
 
 import React from 'react'
