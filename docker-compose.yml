@@ -9,14 +9,14 @@ services:
       - ./js:/app
     command: ["/bin/ash", "cmd/start-in-docker.sh"]
   graphql:
-    build: golang
+    build: .
     ports:
       - "5000:5000"
     environment:
       DATABASE_URL: "postgres://postgres:postgres@postgres/hellocrud_development?sslmode=disable"
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: hellocrud_development
-    working_dir: /go/src/github.com/choonkeat/hellocrud/golang
+    working_dir: /go/src/github.com/choonkeat/hellocrud
     volumes:
       - .:/go/src/github.com/choonkeat/hellocrud
     command: ["/bin/ash", "cmd/wait-for-postgres.sh", "make"]

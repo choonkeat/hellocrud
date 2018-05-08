@@ -1,6 +1,6 @@
 # Summary
 
-Uses [sqlboiler](https://github.com/volatiletech/sqlboiler) to generate [ORM](https://github.com/choonkeat/hellocrud/tree/master/golang/example/dbmodel), [GraphQL backend](https://github.com/choonkeat/hellocrud/tree/master/golang/example/graph) and [React JS frontend](https://github.com/choonkeat/hellocrud/tree/master/js/src) to CRUD against your [database schema](https://github.com/choonkeat/hellocrud/tree/master/golang/example/db/migrations)
+Uses [sqlboiler](https://github.com/volatiletech/sqlboiler) to generate [ORM](https://github.com/choonkeat/hellocrud/tree/master/dbmodel), [GraphQL backend](https://github.com/choonkeat/hellocrud/tree/master/graph) and [React JS frontend](https://github.com/choonkeat/hellocrud/tree/master/js/src) to CRUD against your [database schema](https://github.com/choonkeat/hellocrud/tree/master/db/migrations)
 
 # Getting started (Docker)
 
