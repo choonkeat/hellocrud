@@ -8,7 +8,7 @@ type search{{$modelName}}Input struct {
 {{range $column := .Table.Columns }}
 {{- if containsAny $pkColNames $column.Name }}
 {{- else if eq $column.Type "[]byte" }}
-  {{titleCase $column.Name}} *[]byte `json:"{{$column.Name }}"`
+  {{titleCase $column.Name}} *Base64 `json:"{{$column.Name }}"`
 {{- else if eq $column.Type "bool" }}
   {{titleCase $column.Name}} *bool `json:"{{$column.Name }}"`
 {{- else if eq $column.Type "float32" }}
@@ -26,7 +26,7 @@ type search{{$modelName}}Input struct {
 {{- else if eq $column.Type "null.Byte" }}
   {{titleCase $column.Name}} *byte `json:"{{$column.Name }}"`
 {{- else if eq $column.Type "null.Bytes" }}
-  {{titleCase $column.Name}} *[]byte `json:"{{$column.Name }}"`
+  {{titleCase $column.Name}} *Base64 `json:"{{$column.Name }}"`
 {{- else if eq $column.Type "null.Float64" }}
   {{titleCase $column.Name}} *float64 `json:"{{$column.Name }}"`
 {{- else if eq $column.Type "null.Int" }}
@@ -36,7 +36,7 @@ type search{{$modelName}}Input struct {
 {{- else if eq $column.Type "null.Int64" }}
   {{titleCase $column.Name}} *Int64 `json:"{{$column.Name }}"`
 {{- else if eq $column.Type "null.JSON" }}
-  {{titleCase $column.Name}} *[]byte `json:"{{$column.Name }}"`
+  {{titleCase $column.Name}} *Text `json:"{{$column.Name }}"`
 {{- else if eq $column.Type "null.String" }}
   {{titleCase $column.Name}} *string `json:"{{$column.Name }}"`
 {{- else if eq $column.Type "null.Time" }}

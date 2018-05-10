@@ -1,4 +1,5 @@
 /*sqlboiler2other
+
 import React from 'react'
 import './App.css'
 {{- range $table := .Tables}}
@@ -7,7 +8,7 @@ import './App.css'
 {{- $modelName := $tableNameSingular | titleCase -}}
 {{- $modelNamePlural := $table.Name | plural | titleCase -}}
 {{- $modelNameCamel := $tableNameSingular | camelCase}}
-import {{ $modelName }} from './{{ $tableNameSingular }}'
+import {{ $modelName }} from './{{ $table.Name }}'
 {{- end }}
 import { Switch, Route } from 'react-router'
 import { ApolloProvider } from 'react-apollo'

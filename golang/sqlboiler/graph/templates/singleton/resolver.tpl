@@ -1,3 +1,5 @@
+import "github.com/pkg/errors"
+
 // Resolver is the root GraphQL resolver
 type Resolver struct {
 	sqldb *sql.DB

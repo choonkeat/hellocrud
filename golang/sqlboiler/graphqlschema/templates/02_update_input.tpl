@@ -28,9 +28,9 @@ input Update{{$modelName}}Input {
 	{{- else if eq $column.Type "null.Bool" }}
 	  {{camelCase $column.Name}}: Boolean
 	{{- else if eq $column.Type "null.Byte" }}
-	  {{camelCase $column.Name}}: string
+	  {{camelCase $column.Name}}: Base64
 	{{- else if eq $column.Type "null.Bytes" }}
-	  {{camelCase $column.Name}}: string
+	  {{camelCase $column.Name}}: Base64
 	{{- else if eq $column.Type "null.Float64" }}
 	  {{camelCase $column.Name}}: Float
 	{{- else if eq $column.Type "null.Int" }}
@@ -40,7 +40,7 @@ input Update{{$modelName}}Input {
 	{{- else if eq $column.Type "null.Int64" }}
 	  {{camelCase $column.Name}}: Int64
 	{{- else if eq $column.Type "null.JSON" }}
-	  {{camelCase $column.Name}}: String
+	  {{camelCase $column.Name}}: Text
 	{{- else if eq $column.Type "null.String" }}
 	  {{camelCase $column.Name}}: String
 	{{- else if eq $column.Type "null.Time" }}

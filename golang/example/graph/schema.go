@@ -69,5 +69,6 @@ func init() {
 		strings.Join(operationTypes, "\n") + "\n" + // Operation types (i.e. type Query {}, type Mutation {})
 		schema.String() // Other schema types
 
+	ioutil.WriteFile("example/graph/schema.graphql", []byte(Schema), 0660)
 	graphql.MustParseSchema(Schema, &Resolver{})
 }

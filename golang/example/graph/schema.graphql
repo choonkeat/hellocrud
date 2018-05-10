@@ -1,0 +1,148 @@
+
+		schema {query: Query
+mutation: Mutation}type Query {searchComments(
+  sinceID: ID
+  pageNumber: Int
+  pageSize: Int
+  input: SearchCommentInput
+): CommentsCollection!
+
+commentByID(
+  id: ID!
+): Comment!
+
+searchPosts(
+  sinceID: ID
+  pageNumber: Int
+  pageSize: Int
+  input: SearchPostInput
+): PostsCollection!
+
+postByID(
+  id: ID!
+): Post!
+}
+type Mutation {createComment(
+  input: CreateCommentInput!
+): Comment!
+
+updateCommentByID(
+  id: ID!
+  input: UpdateCommentInput!
+): Comment!
+
+deleteCommentByID(
+  id: ID!
+): Comment!
+
+createPost(
+  input: CreatePostInput!
+): Post!
+
+updatePostByID(
+  id: ID!
+  input: UpdatePostInput!
+): Post!
+
+deletePostByID(
+  id: ID!
+): Post!
+}
+# Comment is a resource type
+type Comment {
+
+		# Convenient GUID for ReactJS component @key attribute
+		rowId: String!
+		id: ID!
+		postID: Int!
+		author: String!
+		body: String!
+		notes: String
+		createdAt: Time
+		updatedAt: Time
+		# post has a foreign key pointing to Comment
+		post: Post
+}
+
+type CommentsCollection {
+	nodes: [Comment!]!
+}
+
+
+# CreateCommentInput is a create input type for Comment resource
+input CreateCommentInput {
+
+	  postID: Int!
+	  author: String!
+	  body: String!
+	  notes: String
+}
+
+
+input UpdateCommentInput {
+	  postID: Int!
+	  author: String!
+	  body: String!
+	  notes: String
+}
+
+
+# SearchCommentInput is a search input/arguments type for Comment resources
+input SearchCommentInput {
+
+	  postID: Int
+	  author: String
+	  body: String
+	  notes: String
+}
+# Post is a resource type
+type Post {
+
+		# Convenient GUID for ReactJS component @key attribute
+		rowId: String!
+		id: ID!
+		title: String!
+		author: String!
+		body: String!
+		notes: String
+		createdAt: Time
+		updatedAt: Time
+		# comments has a many-to-one relationship with Post
+		comments: CommentsCollection
+}
+
+type PostsCollection {
+	nodes: [Post!]!
+}
+
+
+# CreatePostInput is a create input type for Post resource
+input CreatePostInput {
+
+	  title: String!
+	  author: String!
+	  body: String!
+	  notes: String
+}
+
+
+input UpdatePostInput {
+	  title: String!
+	  author: String!
+	  body: String!
+	  notes: String
+}
+
+
+# SearchPostInput is a search input/arguments type for Post resources
+input SearchPostInput {
+
+	  title: String
+	  author: String
+	  body: String
+	  notes: String
+}
+scalar Text
+scalar Time
+scalar Int64
+scalar Base64

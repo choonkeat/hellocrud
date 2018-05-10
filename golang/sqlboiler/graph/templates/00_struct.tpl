@@ -1,3 +1,5 @@
+import "github.com/pkg/errors"
+
 {{- $dot := . -}}
 {{- $tableNameSingular := .Table.Name | singular -}}
 {{- $modelName := $tableNameSingular | titleCase -}}
@@ -43,8 +45,8 @@ func (o {{$modelName}}) {{titleCase $column.Name}}() graphql.ID {
 }
 {{- else if eq $column.Type "[]byte" }}
 // {{titleCase $column.Name}} is the {{$modelName}} {{$column.Name}}
-func (o {{$modelName}}) {{titleCase $column.Name}}() []byte {
-  return o.model.{{titleCase $column.Name}} // {{$column.Type}}
+func (o {{$modelName}}) {{titleCase $column.Name}}() Base64 {
+  return Base64(o.model.{{titleCase $column.Name}}) // {{$column.Type}}
 }
 {{- else if eq $column.Type "bool" }}
 // {{titleCase $column.Name}} is the {{$modelName}} {{$column.Name}}
@@ -88,8 +90,12 @@ func (o {{$modelName}}) {{titleCase $column.Name}}() *byte {
 }
 {{- else if eq $column.Type "null.Bytes" }}
 // {{titleCase $column.Name}} is the {{$modelName}} {{$column.Name}}
-func (o {{$modelName}}) {{titleCase $column.Name}}() *[]byte {
-  return o.model.{{titleCase $column.Name}}.Ptr() // {{$column.Type}}
+func (o {{$modelName}}) {{titleCase $column.Name}}() *Base64 {
+	if !o.model.{{titleCase $column.Name}}.Valid {
+		return nil
+	}
+	x := Base64(o.model.{{titleCase $column.Name}}.Bytes)
+	return &x // {{$column.Type}}
 }
 {{- else if eq $column.Type "null.Float64" }}
 // {{titleCase $column.Name}} is the {{$modelName}} {{$column.Name}}
@@ -125,8 +131,12 @@ func (o {{$modelName}}) {{titleCase $column.Name}}() *Int64 {
 }
 {{- else if eq $column.Type "null.JSON" }}
 // {{titleCase $column.Name}} is the {{$modelName}} {{$column.Name}}
-func (o {{$modelName}}) {{titleCase $column.Name}}() *[]byte {
-  return o.model.{{titleCase $column.Name}}.Ptr() // {{$column.Type}}
+func (o {{$modelName}}) {{titleCase $column.Name}}() *Text {
+	if !o.model.{{titleCase $column.Name}}.Valid {
+    return nil
+  }
+	x := Text(o.model.{{titleCase $column.Name}}.JSON)
+	return &x // {{$column.Type}}
 }
 {{- else if eq $column.Type "null.String" }}
 // {{titleCase $column.Name}} is the {{$modelName}} {{$column.Name}}
