@@ -1,9 +1,12 @@
 package main
 
 import (
+	"io"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/choonkeat/hellocrud/graph"
 	graphql "github.com/graph-gophers/graphql-go"
@@ -20,6 +23,7 @@ func main() {
 	graphqlHandler := &relay.Handler{
 		Schema: graphql.MustParseSchema(graph.Schema, r),
 	}
+	graphqlHandler.Schema.ToJSON() // force panic if schema is barfed
 
 	if os.Getenv("DEBUG") != "" {
 		http.HandleFunc("/graphiql", func(w http.ResponseWriter, r *http.Request) {
@@ -29,6 +33,8 @@ func main() {
 	} else {
 		http.Handle("/graphql", graphqlHandler)
 	}
+
+	http.HandleFunc("/", serveFilesWithDefault("js/build", "js/build/index.html"))
 
 	addr := ":" + os.Getenv("PORT")
 	if addr == ":" {
@@ -86,5 +92,26 @@ func allowCors(handler http.Handler) http.HandlerFunc {
 			return
 		}
 		handler.ServeHTTP(w, r)
+	}
+}
+
+func serveFilesWithDefault(staticDir, notfound string) http.HandlerFunc {
+	uriPathMap := map[string]string{}
+	filepath.Walk("js/build", func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() || path == notfound {
+			return nil
+		}
+		uriPathMap[strings.TrimPrefix(path, staticDir)] = path
+		return nil
+	})
+	return func(w http.ResponseWriter, r *http.Request) {
+		path, ok := uriPathMap[r.RequestURI]
+		if !ok {
+			path = notfound
+		}
+
+		f, _ := os.Open(path)
+		defer f.Close()
+		io.Copy(w, f)
 	}
 }
