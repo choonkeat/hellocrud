@@ -1,8 +1,6 @@
 DBTYPE = postgres
 DEBUG  = 1
 
-generate-and-run: generate run
-
 run: dbmigrate
 	env DEBUG=$(DEBUG) DATABASE_URL=$(DATABASE_URL) go run cmd/server/main.go
 

@@ -98,7 +98,7 @@ func allowCors(handler http.Handler) http.HandlerFunc {
 func serveFilesWithDefault(staticDir, notfound string) http.HandlerFunc {
 	uriPathMap := map[string]string{}
 	filepath.Walk("js/build", func(path string, info os.FileInfo, err error) error {
-		if info.IsDir() || path == notfound {
+		if info == nil || info.IsDir() || path == notfound {
 			return nil
 		}
 		uriPathMap[strings.TrimPrefix(path, staticDir)] = path
@@ -110,7 +110,11 @@ func serveFilesWithDefault(staticDir, notfound string) http.HandlerFunc {
 			path = notfound
 		}
 
-		f, _ := os.Open(path)
+		f, err := os.Open(path)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
 		defer f.Close()
 		io.Copy(w, f)
 	}
