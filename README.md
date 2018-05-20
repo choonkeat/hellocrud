@@ -25,7 +25,7 @@ web_1       | To create a production build, use yarn build.
 - Generated GraphQL endpoint http://localhost:5000/graphql
 - GraphiQL interface http://localhost:5000/graphiql
 
-### Omasake
+### Omakase
 
 - GraphQL https://graphql.org/
 - Go GraphQL https://github.com/graph-gophers/graphql-go
