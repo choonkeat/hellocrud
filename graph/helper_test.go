@@ -4,6 +4,7 @@
 package graph
 
 import (
+	"reflect"
 	"strconv"
 	"testing"
 
@@ -45,43 +46,48 @@ func timeptr(t graphql.Time) *graphql.Time {
 
 func TestQueryModSearch(t *testing.T) {
 	testCases := []struct {
-		givenInput          interface{}
-		expectResultsLength int
+		givenInput interface{}
 	}{
 		{
-			givenInput:          (*searchCommentInput)(nil),
-			expectResultsLength: 0,
+			givenInput: (*searchCommentInput)(nil),
 		},
 		{
 			givenInput: &searchCommentInput{
-
-				PostID: int2ptr(42),
-				Author: strptr("lorem ipsum"), // string
-				Body:   strptr("lorem ipsum"), // string
-				Notes:  strptr("lorem ipsum"), // null.String
+				PostID: intptr(42),
+				Author: strptr("lorem ipsum"),
+				Body:   strptr("lorem ipsum"),
+				Notes:  strptr("lorem ipsum"),
 			},
-			expectResultsLength: 0,
 		},
 		{
-			givenInput:          (*searchPostInput)(nil),
-			expectResultsLength: 0,
+			givenInput: (*searchPostInput)(nil),
 		},
 		{
 			givenInput: &searchPostInput{
-
-				Title:  strptr("lorem ipsum"), // string
-				Author: strptr("lorem ipsum"), // string
-				Body:   strptr("lorem ipsum"), // string
-				Notes:  strptr("lorem ipsum"), // null.String
+				Title:  strptr("lorem ipsum"),
+				Author: strptr("lorem ipsum"),
+				Body:   strptr("lorem ipsum"),
+				Notes:  strptr("lorem ipsum"),
 			},
-			expectResultsLength: 0,
 		},
 	}
 
 	for i, tc := range testCases {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			result := QueryModSearch(tc.givenInput)
-			assert.Len(t, result, tc.expectResultsLength)
+			expectResultsLength := 0
+			v := reflect.ValueOf(tc.givenInput).Elem()
+			if v.IsValid() {
+				for i := 0; i < v.NumField(); i++ {
+					value := v.Field(i) // Value
+					if (value.Kind() == reflect.Ptr && value.IsNil()) || !value.IsValid() {
+						// Skip if field is nil
+						continue
+					}
+					expectResultsLength = expectResultsLength + 1
+				}
+			}
+			assert.Len(t, result, expectResultsLength)
 		})
 	}
 }

@@ -33,7 +33,6 @@ func timeptr(t graphql.Time) *graphql.Time {
 func TestQueryModSearch(t *testing.T) {
 	testCases := []struct {
 		givenInput          interface{}
-		expectResultsLength int
 	}{
 		{{range $table := .Tables}}
 		{{- $tableNameSingular := .Name | singular -}}
@@ -43,18 +42,17 @@ func TestQueryModSearch(t *testing.T) {
 		{{- $pkColNames := .PKey.Columns -}}
 		{
 			givenInput:          (*search{{$modelName}}Input)(nil),
-			expectResultsLength: 0,
 		},
 		{
 			givenInput:          &search{{$modelName}}Input{
-			{{range $column := .Columns }}
+			{{- range $column := .Columns -}}
 			{{- if containsAny $pkColNames $column.Name }}
 			{{- else if eq $column.Name "created_by" }}
 			{{- else if eq $column.Name "created_at" }}
 			{{- else if eq $column.Name "updated_by" }}
 			{{- else if eq $column.Name "updated_at" }}
 			{{- else if eq $column.Type "[]byte" }}
-				{{titleCase $column.Name}}: strptr("lorem ipsum"), // {{ $column.Type }}
+				{{titleCase $column.Name}}: strptr("lorem ipsum"),
 			{{- else if eq $column.Type "bool" }}
 				{{titleCase $column.Name}}: bool2ptr(true),
 			{{- else if eq $column.Type "float32" }}
@@ -62,9 +60,9 @@ func TestQueryModSearch(t *testing.T) {
 			{{- else if eq $column.Type "float64" }}
 				{{titleCase $column.Name}}: float2ptr(3.14),
 			{{- else if eq $column.Type "int" }}
-				{{titleCase $column.Name}}: int2ptr(42),
+				{{titleCase $column.Name}}: intptr(42),
 			{{- else if eq $column.Type "int16" }}
-				{{titleCase $column.Name}}: int2ptr(42),
+				{{titleCase $column.Name}}: intptr(42),
 			{{- else if eq $column.Type "int64" }}
 				{{titleCase $column.Name}}: int64ptr(Int64("42")),
 			{{- else if eq $column.Type "null.Bool" }}
@@ -84,21 +82,20 @@ func TestQueryModSearch(t *testing.T) {
 			{{- else if eq $column.Type "null.JSON" }}
 				{{titleCase $column.Name}}: textptr("text"),
 			{{- else if eq $column.Type "null.String" }}
-				{{titleCase $column.Name}}: strptr("lorem ipsum"), // {{ $column.Type }}
+				{{titleCase $column.Name}}: strptr("lorem ipsum"),
 			{{- else if eq $column.Type "null.Time" }}
 				{{titleCase $column.Name}}: timeptr(graphql.Time{}),
 			{{- else if eq $column.Type "string" }}
-				{{titleCase $column.Name}}: strptr("lorem ipsum"), // {{ $column.Type }}
+				{{titleCase $column.Name}}: strptr("lorem ipsum"),
 			{{- else if eq $column.Type "time.Time" }}
 				{{titleCase $column.Name}}: timeptr(graphql.Time{}),
 			{{- else if eq $column.Type "types.Byte" }}
-				{{titleCase $column.Name}}: strptr("lorem ipsum"), // {{ $column.Type }}
+				{{titleCase $column.Name}}: strptr("lorem ipsum"),
 			{{- else if eq $column.Type "types.JSON" }}
-				{{titleCase $column.Name}}: strptr("lorem ipsum"), // {{ $column.Type }}
+				{{titleCase $column.Name}}: strptr("lorem ipsum"),
 			{{- end -}}
 			{{- end }}
       },
-			expectResultsLength: 0,
 		},
 		{{end}}
 	}
@@ -106,7 +103,19 @@ func TestQueryModSearch(t *testing.T) {
 	for i, tc := range testCases {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			result := QueryModSearch(tc.givenInput)
-			assert.Len(t, result, tc.expectResultsLength)
+			expectResultsLength := 0
+			v := reflect.ValueOf(tc.givenInput).Elem()
+			if v.IsValid() {
+				for i := 0; i < v.NumField(); i++ {
+					value := v.Field(i) // Value
+					if (value.Kind() == reflect.Ptr && value.IsNil()) || !value.IsValid() {
+						// Skip if field is nil
+						continue
+					}
+					expectResultsLength = expectResultsLength + 1
+				}
+			}
+			assert.Len(t, result, expectResultsLength)
 		})
 	}
 }
