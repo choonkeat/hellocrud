@@ -6,8 +6,8 @@ package graph
 import (
 	"strconv"
 	"testing"
-	"time"
 
+	graphql "github.com/graph-gophers/graphql-go"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,15 +23,15 @@ func base64ptr(b Base64) *Base64 {
 	return &b
 }
 
-func floatptr(f float) *float {
+func floatptr(f float64) *float64 {
 	return &f
 }
 
-func intptr(i int) *int {
+func intptr(i int32) *int32 {
 	return &i
 }
 
-func int64ptr(i int64) *int64 {
+func int64ptr(i Int64) *Int64 {
 	return &i
 }
 
@@ -39,7 +39,7 @@ func textptr(t Text) *Text {
 	return &t
 }
 
-func timeptr(t time.Time) *time.Time {
+func timeptr(t graphql.Time) *graphql.Time {
 	return &t
 }
 
@@ -48,7 +48,6 @@ func TestQueryModSearch(t *testing.T) {
 		givenInput          interface{}
 		expectResultsLength int
 	}{
-
 		{
 			givenInput:          (*searchCommentInput)(nil),
 			expectResultsLength: 0,
@@ -56,15 +55,13 @@ func TestQueryModSearch(t *testing.T) {
 		{
 			givenInput: &searchCommentInput{
 
-				id:     42,
-				postID: 42,
-				author: "lorem ipsum",
-				body:   "lorem ipsum",
-				notes:  strptr("lorem ipsum"),
+				PostID: int2ptr(42),
+				Author: strptr("lorem ipsum"), // string
+				Body:   strptr("lorem ipsum"), // string
+				Notes:  strptr("lorem ipsum"), // null.String
 			},
 			expectResultsLength: 0,
 		},
-
 		{
 			givenInput:          (*searchPostInput)(nil),
 			expectResultsLength: 0,
@@ -72,11 +69,10 @@ func TestQueryModSearch(t *testing.T) {
 		{
 			givenInput: &searchPostInput{
 
-				id:     42,
-				title:  "lorem ipsum",
-				author: "lorem ipsum",
-				body:   "lorem ipsum",
-				notes:  strptr("lorem ipsum"),
+				Title:  strptr("lorem ipsum"), // string
+				Author: strptr("lorem ipsum"), // string
+				Body:   strptr("lorem ipsum"), // string
+				Notes:  strptr("lorem ipsum"), // null.String
 			},
 			expectResultsLength: 0,
 		},

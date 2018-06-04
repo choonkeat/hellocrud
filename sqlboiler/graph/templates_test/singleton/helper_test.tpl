@@ -10,15 +10,15 @@ func base64ptr(b Base64) *Base64 {
 	return &b
 }
 
-func floatptr(f float) *float {
+func floatptr(f float64) *float64 {
 	return &f
 }
 
-func intptr(i int) *int {
+func intptr(i int32) *int32 {
 	return &i
 }
 
-func int64ptr(i int64) *int64 {
+func int64ptr(i Int64) *Int64 {
 	return &i
 }
 
@@ -26,7 +26,7 @@ func textptr(t Text) *Text {
 	return &t
 }
 
-func timeptr(t time.Time) *time.Time {
+func timeptr(t graphql.Time) *graphql.Time {
 	return &t
 }
 
@@ -40,6 +40,7 @@ func TestQueryModSearch(t *testing.T) {
 		{{- $modelName := $tableNameSingular | titleCase -}}
 		{{- $modelNamePlural := $table.Name | plural | titleCase -}}
 		{{- $modelNameCamel := $tableNameSingular | camelCase}}
+		{{- $pkColNames := .PKey.Columns -}}
 		{
 			givenInput:          (*search{{$modelName}}Input)(nil),
 			expectResultsLength: 0,
@@ -47,52 +48,53 @@ func TestQueryModSearch(t *testing.T) {
 		{
 			givenInput:          &search{{$modelName}}Input{
 			{{range $column := .Columns }}
-			{{- if eq $column.Name "created_by" }}
+			{{- if containsAny $pkColNames $column.Name }}
+			{{- else if eq $column.Name "created_by" }}
 			{{- else if eq $column.Name "created_at" }}
 			{{- else if eq $column.Name "updated_by" }}
 			{{- else if eq $column.Name "updated_at" }}
 			{{- else if eq $column.Type "[]byte" }}
-				{{camelCase $column.Name}}: "lorem ipsum",
+				{{titleCase $column.Name}}: strptr("lorem ipsum"), // {{ $column.Type }}
 			{{- else if eq $column.Type "bool" }}
-				{{camelCase $column.Name}}: true,
+				{{titleCase $column.Name}}: bool2ptr(true),
 			{{- else if eq $column.Type "float32" }}
-				{{camelCase $column.Name}}: 3.14,
+				{{titleCase $column.Name}}: float2ptr(3.14),
 			{{- else if eq $column.Type "float64" }}
-				{{camelCase $column.Name}}: 3.14,
+				{{titleCase $column.Name}}: float2ptr(3.14),
 			{{- else if eq $column.Type "int" }}
-				{{camelCase $column.Name}}: 42,
+				{{titleCase $column.Name}}: int2ptr(42),
 			{{- else if eq $column.Type "int16" }}
-				{{camelCase $column.Name}}: 42,
+				{{titleCase $column.Name}}: int2ptr(42),
 			{{- else if eq $column.Type "int64" }}
-				{{camelCase $column.Name}}: int64(42),
+				{{titleCase $column.Name}}: int64ptr(Int64("42")),
 			{{- else if eq $column.Type "null.Bool" }}
-				{{camelCase $column.Name}}: bool2ptr(true),
+				{{titleCase $column.Name}}: bool2ptr(true),
 			{{- else if eq $column.Type "null.Byte" }}
-				{{camelCase $column.Name}}: base64ptr("Base64"),
+				{{titleCase $column.Name}}: base64ptr("Base64"),
 			{{- else if eq $column.Type "null.Bytes" }}
-				{{camelCase $column.Name}}: base64ptr("Base64"),
+				{{titleCase $column.Name}}: base64ptr("Base64"),
 			{{- else if eq $column.Type "null.Float64" }}
-				{{camelCase $column.Name}}: floatptr(3.14),
+				{{titleCase $column.Name}}: floatptr(3.14),
 			{{- else if eq $column.Type "null.Int" }}
-				{{camelCase $column.Name}}: intptr(42),
+				{{titleCase $column.Name}}: intptr(42),
 			{{- else if eq $column.Type "null.Int16" }}
-				{{camelCase $column.Name}}: intptr(42),
+				{{titleCase $column.Name}}: intptr(42),
 			{{- else if eq $column.Type "null.Int64" }}
-				{{camelCase $column.Name}}: int64ptr(int64(42)),
+				{{titleCase $column.Name}}: int64ptr(Int64("42")),
 			{{- else if eq $column.Type "null.JSON" }}
-				{{camelCase $column.Name}}: textptr("text"),
+				{{titleCase $column.Name}}: textptr("text"),
 			{{- else if eq $column.Type "null.String" }}
-				{{camelCase $column.Name}}: strptr("lorem ipsum"),
+				{{titleCase $column.Name}}: strptr("lorem ipsum"), // {{ $column.Type }}
 			{{- else if eq $column.Type "null.Time" }}
-				{{camelCase $column.Name}}: timeptr(time.Now()),
+				{{titleCase $column.Name}}: timeptr(graphql.Time{}),
 			{{- else if eq $column.Type "string" }}
-				{{camelCase $column.Name}}: "lorem ipsum",
+				{{titleCase $column.Name}}: strptr("lorem ipsum"), // {{ $column.Type }}
 			{{- else if eq $column.Type "time.Time" }}
-				{{camelCase $column.Name}}: time.Now(),
+				{{titleCase $column.Name}}: timeptr(graphql.Time{}),
 			{{- else if eq $column.Type "types.Byte" }}
-				{{camelCase $column.Name}}: "lorem ipsum",
+				{{titleCase $column.Name}}: strptr("lorem ipsum"), // {{ $column.Type }}
 			{{- else if eq $column.Type "types.JSON" }}
-				{{camelCase $column.Name}}: "lorem ipsum",
+				{{titleCase $column.Name}}: strptr("lorem ipsum"), // {{ $column.Type }}
 			{{- end -}}
 			{{- end }}
       },
