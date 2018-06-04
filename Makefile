@@ -20,10 +20,10 @@ generate-graphql-schema: dbenv
 
 generate-js: dbenv
 	# 5. generate react+apollo crud
-	sqlboiler --output ../js/src   --pkgname js   --schema app --basedir sqlboiler/js $(DBTYPE)
+	sqlboiler --output js/src --pkgname js --schema app --basedir sqlboiler/js $(DBTYPE)
 	# 5a. clean up generated js code; sqlboiler only generates `.go`
-	# rm -f ../js/src/*js
-	go run cmd/sqlboiler2other/main.go -basedir ../js/src -ext js
+	# rm -f js/src/*js
+	go run cmd/sqlboiler2other/main.go -basedir js/src -ext js
 
 dbmigrate:
 	# https://github.com/mattes/migrate/blob/master/cli/README.md
