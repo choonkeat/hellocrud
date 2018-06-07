@@ -4,7 +4,7 @@ DEBUG  = 1
 run: dbmigrate
 	env DEBUG=$(DEBUG) DATABASE_URL=$(DATABASE_URL) go run cmd/server/main.go
 
-generate: dbmigrate generate-golang generate-graphql-schema generate-js
+generate: dbmigrate generate-golang generate-graphql-schema generate-js generate-elm
 
 generate-golang: dbenv
 	# 2. generate db orm
@@ -24,6 +24,11 @@ generate-js: dbenv
 	# 5a. clean up generated js code; sqlboiler only generates `.go`
 	# rm -f js/src/*js
 	go run cmd/sqlboiler2other/main.go -basedir js/src -ext js
+
+generate-elm: dbenv
+	# 5. generate elm crud
+	go run cmd/generatecode/main.go -schema app -tpl elm/tpl -src elm/src
+	elm-format --yes elm/src
 
 dbmigrate:
 	# https://github.com/mattes/migrate/blob/master/cli/README.md
