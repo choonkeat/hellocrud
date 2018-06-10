@@ -573,13 +573,13 @@ updateModelByLocation : PostModel -> CrudRoute -> ( PostModel, Cmd Msg )
 updateModelByLocation model route =
     case route of
         CrudList ->
-            ( model, querySearchPosts graphqlEndpoint model )
+            ( { model | searchPosts = RemoteData.Loading }, querySearchPosts graphqlEndpoint model )
 
         CrudNew ->
             ( model, Cmd.none )
 
         CrudShow idInt ->
-            ( model, queryPostByID graphqlEndpoint (toString idInt) )
+            ( { model | postByID = RemoteData.Loading }, queryPostByID graphqlEndpoint (toString idInt) )
 
         CrudEdit idInt ->
-            ( model, queryPostByID graphqlEndpoint (toString idInt) )
+            ( { model | postByID = RemoteData.Loading }, queryPostByID graphqlEndpoint (toString idInt) )

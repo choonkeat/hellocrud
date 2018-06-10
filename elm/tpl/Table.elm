@@ -457,13 +457,13 @@ updateModelByLocation : {{ .TableName | .TitleCase }}Model -> CrudRoute -> ( {{ 
 updateModelByLocation model route =
     case route of
         CrudList ->
-            ( model, querySearch{{ .TableName | .TitleCase | .Plural }} graphqlEndpoint model )
+            ( { model | search{{ .TableName | .TitleCase | .Plural }} = RemoteData.Loading }, querySearch{{ .TableName | .TitleCase | .Plural }} graphqlEndpoint model )
 
         CrudNew ->
             ( model, Cmd.none )
 
         CrudShow idInt ->
-            ( model, query{{ .TableName | .TitleCase | .Singular }}ByID graphqlEndpoint (toString idInt) )
+            ( { model | {{ .TableName | .CamelCase | .Singular }}ByID = RemoteData.Loading }, query{{ .TableName | .TitleCase | .Singular }}ByID graphqlEndpoint (toString idInt) )
 
         CrudEdit idInt ->
-            ( model, query{{ .TableName | .TitleCase | .Singular }}ByID graphqlEndpoint (toString idInt) )
+            ( { model | {{ .TableName | .CamelCase | .Singular }}ByID = RemoteData.Loading }, query{{ .TableName | .TitleCase | .Singular }}ByID graphqlEndpoint (toString idInt) )

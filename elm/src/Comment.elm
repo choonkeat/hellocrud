@@ -576,13 +576,13 @@ updateModelByLocation : CommentModel -> CrudRoute -> ( CommentModel, Cmd Msg )
 updateModelByLocation model route =
     case route of
         CrudList ->
-            ( model, querySearchComments graphqlEndpoint model )
+            ( { model | searchComments = RemoteData.Loading }, querySearchComments graphqlEndpoint model )
 
         CrudNew ->
             ( model, Cmd.none )
 
         CrudShow idInt ->
-            ( model, queryCommentByID graphqlEndpoint (toString idInt) )
+            ( { model | commentByID = RemoteData.Loading }, queryCommentByID graphqlEndpoint (toString idInt) )
 
         CrudEdit idInt ->
-            ( model, queryCommentByID graphqlEndpoint (toString idInt) )
+            ( { model | commentByID = RemoteData.Loading }, queryCommentByID graphqlEndpoint (toString idInt) )
