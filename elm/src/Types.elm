@@ -42,7 +42,8 @@ type alias Model =
 
 
 type alias CommentModel =
-    { searchComments : WebData (List Comment)
+    { route : CrudRoute Comment
+    , searchComments : WebData (List Comment)
     , commentByID : WebData Comment
     , formComment : Comment
     }

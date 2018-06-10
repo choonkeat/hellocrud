@@ -1,5 +1,6 @@
 module Comment exposing (..)
 
+import Convert
 import Html exposing (Html, a, button, code, div, form, h1, hr, img, input, label, small, table, tbody, td, text, th, thead, tr)
 import Html.Attributes exposing (attribute, class, href, method, name, placeholder, style, type_, value)
 import Html.Events exposing (onInput, onSubmit, onWithOptions)
@@ -7,12 +8,11 @@ import Http
 import Json.Decode
 import Json.Encode
 import Json.Encode.Extra
+import Navigation
 import RemoteData exposing (WebData)
 import Style exposing (InputField, formField, formSubmitOrCancel)
-import Types exposing (CrudRoute, CrudRoute(..), CommentModel, Route, graphqlEndpoint)
+import Types exposing (CommentModel, CrudRoute, CrudRoute(..), Pagination, Route, graphqlEndpoint)
 import UrlParser exposing ((</>), s, string)
-import Navigation
-import Convert
 
 
 -- Comment and its APIs
@@ -181,16 +181,22 @@ decodeUpdateComment =
 ---- MODEL ----
 
 
+nopagination : Types.Pagination
+nopagination =
+    Types.Pagination Maybe.Nothing Maybe.Nothing
+
+
 init : ( CommentModel, Cmd Msg )
 init =
     let
         model =
             CommentModel
+                (CrudList RemoteData.NotAsked nopagination)
                 RemoteData.NotAsked
                 RemoteData.NotAsked
                 (Types.Comment "" 0 "" "" Maybe.Nothing Maybe.Nothing Maybe.Nothing)
     in
-        updateModelByLocation model (CrudList RemoteData.NotAsked (Types.Pagination Maybe.Nothing Maybe.Nothing))
+        updateModelByLocation model model.route
 
 
 
@@ -214,7 +220,7 @@ update : Msg -> CommentModel -> ( CommentModel, Cmd Msg )
 update msg model =
     case msg of
         OnSearchComments resp ->
-            ( { model | searchComments = resp }, Cmd.none )
+            ( { model | searchComments = resp, route = CrudList resp nopagination }, Cmd.none )
 
         OnCommentByID resp ->
             let

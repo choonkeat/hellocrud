@@ -52,7 +52,7 @@ update msg model =
                 ( comment, cmd ) =
                     Comment.update m model.comment
             in
-                ( { model | comment = comment }, Cmd.map CommentMessage cmd )
+                ( { model | comment = comment, route = CommentPage comment.route }, Cmd.map CommentMessage cmd )
 
 
 
