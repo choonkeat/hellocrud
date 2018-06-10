@@ -4,9 +4,8 @@ import Html exposing (Html, a, br, button, code, div, h1, hr, img, li, nav, span
 import Html.Attributes exposing (attribute, class, href, id, style, type_)
 import Navigation exposing (Location)
 import Platform.Cmd as Cmd exposing (map)
-import Types exposing (CrudRoute, Flags, Model, PostModel, CommentModel, Route(..))
+import Types exposing (CrudRoute, Flags, Model, CommentModel, Route(..))
 import UrlParser exposing ((</>), map, s)
-import Post
 import Comment
 
 
@@ -16,9 +15,6 @@ import Comment
 init : Flags -> Location -> ( Model, Cmd Msg )
 init flags location =
     let
-        ( postModel, _ ) =
-            Post.init
-
         ( commentModel, _ ) =
             Comment.init
 
@@ -27,7 +23,6 @@ init flags location =
 
         model =
             Model currentRoute
-                postModel
                 commentModel
     in
         updateModelByLocation model currentRoute
@@ -39,7 +34,6 @@ init flags location =
 
 type Msg
     = OnLocationChange Location
-    | PostMessage Post.Msg
     | CommentMessage Comment.Msg
 
 
@@ -52,14 +46,6 @@ update msg model =
                     routeFromLocation location
             in
                 updateModelByLocation { model | route = newroute } newroute
-
-        -- Otherwise, we'll delegate to {X} module to handle {X}Message updates
-        PostMessage m ->
-            let
-                ( post, cmd ) =
-                    Post.update m model.post
-            in
-                ( { model | post = post }, Cmd.map PostMessage cmd )
 
         CommentMessage m ->
             let
@@ -84,12 +70,6 @@ view model =
                 HomePage ->
                     div [] []
 
-                -- Otherwise, we'll delegate to {X} module to handle {X}Page views
-                PostPage crudroute ->
-                    div []
-                        [ Html.map PostMessage (Post.view crudroute model.post)
-                        ]
-
                 CommentPage crudroute ->
                     div []
                         [ Html.map CommentMessage (Comment.view crudroute model.comment)
@@ -108,10 +88,6 @@ view model =
                 , div [ class "collapse navbar-collapse", id "navbarSupportedContent" ]
                     [ ul [ class "navbar-nav mr-auto" ]
                         [ text ""
-                        , li [ class "nav-item" ]
-                            [ a [ class "nav-link", href "/post" ]
-                                [ text "Posts" ]
-                            ]
                         , li [ class "nav-item" ]
                             [ a [ class "nav-link", href "/comment" ]
                                 [ text "Comments" ]
@@ -145,7 +121,6 @@ routes : UrlParser.Parser (Route -> a) a
 routes =
     UrlParser.oneOf
         [ UrlParser.map HomePage UrlParser.top
-        , UrlParser.map PostPage (s "post" </> Post.routes)
         , UrlParser.map CommentPage (s "comment" </> Comment.routes)
         ]
 
@@ -177,13 +152,6 @@ updateModelByLocation model route =
 
         HomePage ->
             ( model, Cmd.none )
-
-        PostPage crudroute ->
-            let
-                ( post, cmd ) =
-                    Post.updateModelByLocation model.post crudroute
-            in
-                ( { model | post = post }, Cmd.map PostMessage cmd )
 
         CommentPage crudroute ->
             let

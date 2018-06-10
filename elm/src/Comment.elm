@@ -51,7 +51,7 @@ decodeSearchComments =
     Json.Decode.list Types.commentDecoder
 
 
-queryCommentByID : String -> String -> Cmd Msg
+queryCommentByID : String -> Types.ID -> Cmd Msg
 queryCommentByID graphqlEndpoint idInt =
     let
         body =
@@ -190,7 +190,7 @@ init =
                 RemoteData.NotAsked
                 (Types.Comment "" 0 "" "" Maybe.Nothing Maybe.Nothing Maybe.Nothing)
     in
-        updateModelByLocation model CrudList
+        updateModelByLocation model (CrudList RemoteData.NotAsked (Types.Pagination Maybe.Nothing Maybe.Nothing))
 
 
 
@@ -304,7 +304,7 @@ update msg model =
 ---- VIEW ----
 
 
-view : CrudRoute -> CommentModel -> Html Msg
+view : CrudRoute Types.Comment -> CommentModel -> Html Msg
 view crudroute model =
     case crudroute of
         CrudNew ->
@@ -349,8 +349,8 @@ view crudroute model =
                     ]
                 ]
 
-        CrudEdit commentID ->
-            case model.commentByID of
+        CrudEdit thing id ->
+            case thing of
                 RemoteData.NotAsked ->
                     div [] [ text "Not asked" ]
 
@@ -363,7 +363,7 @@ view crudroute model =
                 RemoteData.Success comment ->
                     div [ class "card-body" ]
                         [ a [ href "/comment" ] [ text "< Comment" ]
-                        , h1 [ class "card-title" ] [ text ("Edit " ++ toString commentID) ]
+                        , h1 [ class "card-title" ] [ text ("Edit " ++ id) ]
                         , form [ onSubmit OnCrudEditSubmit ]
                             [ text ""
                             , formField <|
@@ -402,8 +402,8 @@ view crudroute model =
                             ]
                         ]
 
-        CrudShow commentID ->
-            case model.commentByID of
+        CrudShow thing id ->
+            case thing of
                 RemoteData.NotAsked ->
                     div [] [ text "Not asked" ]
 
@@ -417,7 +417,7 @@ view crudroute model =
                     div [ class "card-body" ]
                         [ a [ href "/comment" ]
                             [ text "← Comments" ]
-                        , h1 [ class "card-title" ] [ text ("Show Comment #" ++ toString commentID) ]
+                        , h1 [ class "card-title" ] [ text ("Show Comment #" ++ id) ]
                         , table []
                             [ tbody []
                                 [ tr []
@@ -472,8 +472,8 @@ view crudroute model =
                             ]
                         ]
 
-        CrudList ->
-            case model.searchComments of
+        CrudList things pagination ->
+            case things of
                 RemoteData.NotAsked ->
                     div [] [ text "Not asked" ]
 
@@ -562,27 +562,60 @@ view crudroute model =
 ---- ROUTING ----
 
 
-routes : UrlParser.Parser (CrudRoute -> a) a
+routes : UrlParser.Parser (CrudRoute a -> c) c
 routes =
     UrlParser.oneOf
-        [ UrlParser.map CrudList UrlParser.top
+        [ UrlParser.map (CrudList RemoteData.NotAsked (Types.Pagination Nothing Nothing)) UrlParser.top
         , UrlParser.map CrudNew (s "new")
-        , UrlParser.map CrudShow UrlParser.int
-        , UrlParser.map CrudEdit (UrlParser.int </> s "edit")
+        , UrlParser.map (CrudShow RemoteData.NotAsked) UrlParser.string
+        , UrlParser.map (CrudEdit RemoteData.NotAsked) (UrlParser.string </> s "edit")
         ]
 
 
-updateModelByLocation : CommentModel -> CrudRoute -> ( CommentModel, Cmd Msg )
+updateModelByLocation : CommentModel -> CrudRoute thing -> ( CommentModel, Cmd Msg )
 updateModelByLocation model route =
     case route of
-        CrudList ->
-            ( model, querySearchComments graphqlEndpoint model )
+        CrudList things pagination ->
+            case things of
+                RemoteData.NotAsked ->
+                    ( model, querySearchComments graphqlEndpoint model )
+
+                RemoteData.Loading ->
+                    ( model, Cmd.none )
+
+                RemoteData.Failure err ->
+                    ( model, Cmd.none )
+
+                RemoteData.Success comments ->
+                    ( model, Cmd.none )
 
         CrudNew ->
             ( model, Cmd.none )
 
-        CrudShow idInt ->
-            ( model, queryCommentByID graphqlEndpoint (toString idInt) )
+        CrudShow thing id ->
+            case thing of
+                RemoteData.NotAsked ->
+                    ( model, Cmd.none )
 
-        CrudEdit idInt ->
-            ( model, queryCommentByID graphqlEndpoint (toString idInt) )
+                RemoteData.Loading ->
+                    ( model, Cmd.none )
+
+                RemoteData.Failure err ->
+                    ( model, Cmd.none )
+
+                RemoteData.Success comments ->
+                    ( model, queryCommentByID graphqlEndpoint id )
+
+        CrudEdit thing id ->
+            case thing of
+                RemoteData.NotAsked ->
+                    ( model, Cmd.none )
+
+                RemoteData.Loading ->
+                    ( model, Cmd.none )
+
+                RemoteData.Failure err ->
+                    ( model, Cmd.none )
+
+                RemoteData.Success comments ->
+                    ( model, queryCommentByID graphqlEndpoint id )
