@@ -1,6 +1,6 @@
 # Summary
 
-Uses [sqlboiler](https://github.com/volatiletech/sqlboiler) to generate [ORM](https://github.com/choonkeat/hellocrud/tree/master/dbmodel), [GraphQL backend](https://github.com/choonkeat/hellocrud/tree/master/graph) and [React JS frontend](https://github.com/choonkeat/hellocrud/tree/master/js/src) to CRUD against your [database schema](https://github.com/choonkeat/hellocrud/tree/master/db/migrations)
+Uses [sqlboiler](https://github.com/volatiletech/sqlboiler) to generate [ORM](https://github.com/choonkeat/hellocrud/tree/master/dbmodel), [GraphQL backend](https://github.com/choonkeat/hellocrud/tree/master/graph), [React JS frontend](https://github.com/choonkeat/hellocrud/tree/master/js/src), and [Elm app](https://github.com/choonkeat/hellocrud/tree/master/elm/src) to CRUD against your [database schema](https://github.com/choonkeat/hellocrud/tree/master/db/migrations)
 
 # Getting started (Docker)
 
@@ -22,6 +22,7 @@ web_1       | To create a production build, use yarn build.
 ```
 
 - Generated React app http://localhost:3000/
+- Generated Elm app http://localhost:4000/
 - Generated GraphQL endpoint http://localhost:5000/graphql
 - GraphiQL interface http://localhost:5000/graphiql
 
@@ -34,3 +35,6 @@ web_1       | To create a production build, use yarn build.
 - Javascript form https://github.com/final-form/final-form
 - Javascript GraphQL https://www.apollographql.com/docs/react/
 - React https://reactjs.org/
+- Elm http://elm-lang.org/
+  - [krisajenkins/remotedata](http://package.elm-lang.org/packages/krisajenkins/remotedata/4.5.0/RemoteData)
+  - [NoRedInk/elm-decode-pipeline](http://package.elm-lang.org/packages/NoRedInk/elm-decode-pipeline/3.0.0/Json-Decode-Pipeline)
