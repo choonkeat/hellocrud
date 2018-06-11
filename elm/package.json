@@ -1,0 +1,7 @@
+{
+  "devDependencies": {
+    "create-elm-app": "^1.10.4",
+    "elm": "^0.18.0",
+    "elm-test": "^0.18.12"
+  }
+}

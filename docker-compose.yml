@@ -8,6 +8,14 @@ services:
     volumes:
       - ./js:/app
     command: ["/bin/ash", "cmd/start-in-docker.sh"]
+  elm:
+    build: "elm"
+    ports:
+      - "4000:3000"
+    working_dir: /app
+    volumes:
+      - ./elm:/app
+    command: ["/bin/bash", "cmd/start-in-docker.sh"]
   graphql:
     build: .
     ports:
