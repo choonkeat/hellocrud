@@ -14,6 +14,7 @@ import UrlParser exposing ((</>), s, string)
 import Navigation
 import Convert
 
+
 -- {{ .TableName | .TitleCase }} and its APIs
 
 
@@ -81,8 +82,8 @@ mutationCreate{{ .TableName | .TitleCase }} graphqlEndpoint {{ .TableName | .Cam
         body =
             Json.Encode.object
                 [ ( "query", Json.Encode.string """
-                  mutation mutation($input: Create{{ .TableName | .TitleCase }}Input!){
-                    create{{ .TableName | .TitleCase }}(input:$input) {
+                  mutation mutation($input: Create{{ .TableName | .TitleCase | .Singular }}Input!){
+                    create{{ .TableName | .TitleCase | .Singular }}(input:$input) {
                       {{ range .DbCols -}}
                       {{ .ColumnName | .CamelCase }}
                       {{ end }}
@@ -93,13 +94,8 @@ mutationCreate{{ .TableName | .TitleCase }} graphqlEndpoint {{ .TableName | .Cam
                   , Json.Encode.object
                         [ ( "input"
                           , Json.Encode.object
-                                [ ("_deleteme", Json.Encode.Extra.maybe Json.Encode.string Nothing) {{- range $index, $row := .DbCols -}}
-                                {{ if .IsPrimaryKey }}
-                                {{ else if eq .ColumnName "created_at" }}
-                                {{ else if eq .ColumnName "updated_at" }}
-                                {{ else }}
+                                [ {{- range $index, $row := .NonPkColsWithout "created_at" "updated_at" -}}
                                 {{- if gt $index 0 }}, {{ end }}( "{{ .ColumnName | .CamelCase }}", {{ .ElmEncoder }} {{ .TableName | .CamelCase }}.{{ .ColumnName | .CamelCase }} )
-                                {{ end -}}
                                 {{ end -}}
                                 ]
                           )
@@ -123,8 +119,8 @@ mutationUpdate{{ .TableName | .TitleCase }} graphqlEndpoint {{ .TableName | .Cam
         body =
             Json.Encode.object
                 [ ( "query", Json.Encode.string """
-                  mutation mutation($id: ID!, $input: Update{{ .TableName | .TitleCase }}Input!){
-                    update{{ .TableName | .TitleCase }}ByID(id:$id,input:$input) {
+                  mutation mutation($id: ID!, $input: Update{{ .TableName | .TitleCase | .Singular }}Input!){
+                    update{{ .TableName | .TitleCase | .Singular }}ByID(id:$id,input:$input) {
                       {{ range .DbCols -}}
                       {{ .ColumnName | .CamelCase }}
                       {{ end }}
@@ -137,13 +133,8 @@ mutationUpdate{{ .TableName | .TitleCase }} graphqlEndpoint {{ .TableName | .Cam
                           , Json.Encode.string {{ .TableName | .CamelCase }}.id)
                         , ( "input"
                           , Json.Encode.object
-                                [ ("_deleteme", Json.Encode.Extra.maybe Json.Encode.string Nothing) {{- range $index, $row := .DbCols -}}
-                                {{ if .IsPrimaryKey }}
-                                {{ else if eq .ColumnName "created_at" }}
-                                {{ else if eq .ColumnName "updated_at" }}
-                                {{ else }}
+                                [ {{- range $index, $row := .NonPkColsWithout "created_at" "updated_at" -}}
                                 {{- if gt $index 0 }}, {{ end }}( "{{ .ColumnName | .CamelCase }}", {{ .ElmEncoder }} {{ .TableName | .CamelCase }}.{{ .ColumnName | .CamelCase }} )
-                                {{ end -}}
                                 {{ end -}}
                                 ]
                           )
@@ -183,13 +174,8 @@ init =
 type Msg
     = OnSearch{{ .TableName | .TitleCase | .Plural }} (WebData (List Types.{{ .TableName | .TitleCase }}))
     | On{{ .TableName | .TitleCase | .Singular }}ByID (WebData Types.{{ .TableName | .TitleCase }})
-    {{ range .DbCols -}}
-    {{ if .IsPrimaryKey }}
-    {{ else if eq .ColumnName "created_at" }}
-    {{ else if eq .ColumnName "updated_at" }}
-    {{ else }}
+    {{ range .NonPkColsWithout "created_at" "updated_at" -}}
     | OnFormFieldSet{{ .ColumnName | .TitleCase }} String
-    {{ end -}}
     {{ end -}}
     | OnCrudNewSubmit
     | OnCrudNewResult (WebData Types.{{ .TableName | .TitleCase }})
@@ -222,11 +208,7 @@ update msg model =
             in
               ( { model | {{ .TableName | .CamelCase | .Singular }}ByID = resp, form{{ .TableName | .TitleCase }} = form{{ .TableName | .TitleCase }} }, Cmd.none )
 
-        {{ range .DbCols -}}
-        {{ if .IsPrimaryKey }}
-        {{ else if eq .ColumnName "created_at" }}
-        {{ else if eq .ColumnName "updated_at" }}
-        {{ else }}
+        {{ range .NonPkColsWithout "created_at" "updated_at" -}}
         OnFormFieldSet{{ .ColumnName | .TitleCase }} str ->
             {{ if eq .ElmTypeNoMaybe "String" -}}
             let
@@ -243,7 +225,6 @@ update msg model =
             in
                 ( { model | form{{ .TableName | .TitleCase }} = { old{{ .TableName | .TitleCase }} | {{ .ColumnName | .CamelCase }} = {{ .Just }}newValue } }, Cmd.none )
             {{ end }}
-        {{ end -}}
         {{ end -}}
 
         OnCrudNewSubmit ->
@@ -292,13 +273,8 @@ view crudroute model =
                 [ a [ href "/{{ .TableName }}" ] [ text "< {{ .TableName | .TitleCase }}" ]
                 , h1 [ class "card-title" ] [ text "New {{ .TableName | .TitleCase }}" ]
                 , form [ onSubmit OnCrudNewSubmit ]
-                  [ text ""
-                  {{ range .DbCols -}}
-                  {{ if .IsPrimaryKey }}
-                  {{ else if eq .ColumnName "created_at" }}
-                  {{ else if eq .ColumnName "updated_at" }}
-                  {{ else }}
-                  , formField <|
+                  [ {{- range $index, $row := .NonPkColsWithout "created_at" "updated_at" -}}
+                  {{- if gt $index 0 }}, {{ end }}formField <|
                       { label = "{{ .ColumnName | .TitleCase }}"
                       , name = "{{ .ColumnName | .CamelCase }}"
                       , placeholder = ""
@@ -306,7 +282,7 @@ view crudroute model =
                       , hint = ""
                       , msgTag = OnFormFieldSet{{ .ColumnName | .TitleCase }}
                       }
-                  {{ end }}{{ end -}}
+                  {{ end -}}
                   , formSubmitOrCancel "/{{ .TableName }}"
                   ]
                 ]
@@ -327,13 +303,8 @@ view crudroute model =
                         [ a [ href "/{{ .TableName }}" ] [ text "< {{ .TableName | .TitleCase }}" ]
                         , h1 [ class "card-title" ] [ text ("Edit " ++ toString {{ .TableName | .CamelCase }}ID) ]
                         , form [ onSubmit OnCrudEditSubmit ]
-                          [ text ""
-                          {{ range .DbCols -}}
-                          {{ if .IsPrimaryKey }}
-                          {{ else if eq .ColumnName "created_at" }}
-                          {{ else if eq .ColumnName "updated_at" }}
-                          {{ else }}
-                          , formField <|
+                          [ {{- range $index, $row := .NonPkColsWithout "created_at" "updated_at" -}}
+                          {{- if gt $index 0 }}, {{ end }}formField <|
                               { label = "{{ .ColumnName | .TitleCase }}"
                               , name = "{{ .ColumnName | .CamelCase }}"
                               , placeholder = ""
@@ -341,7 +312,6 @@ view crudroute model =
                               , hint = ""
                               , msgTag = OnFormFieldSet{{ .ColumnName | .TitleCase }}
                               }
-                          {{ end -}}
                           {{ end -}}
                           , formSubmitOrCancel "/{{ .TableName }}"
                           ]
@@ -365,16 +335,14 @@ view crudroute model =
                         , h1 [ class "card-title" ] [ text ("Show {{ .TableName | .TitleCase | .Singular }} #" ++ toString {{ .TableName | .CamelCase }}ID) ]
                         , table []
                             [ tbody []
-                                [ tr []
-                                    [ {{- range $index, $row := .DbCols -}}
-                                    {{- if gt $index 0 }}, {{ end }}tr []
-                                      [ th []
-                                          [ text "{{ .ColumnName | .TitleCase }}" ]
-                                      , td []
-                                          [ text {{ if ne .ElmType "String" }}(toString {{ end }}{{ .TableName | .CamelCase }}.{{ .ColumnName | .CamelCase }}{{ if ne .ElmType "String" }}){{ end }} ]
-                                      ]
-                                    {{ end -}}
-                                    ]
+                                [ {{- range $index, $row := .NonPkColsWithout "created_at" "updated_at" -}}
+                                {{- if gt $index 0 }}, {{ end }}tr []
+                                  [ th []
+                                      [ text "{{ .ColumnName | .TitleCase }}" ]
+                                  , td []
+                                      [ text {{ if ne .ElmType "String" }}(toString {{ end }}{{ .TableName | .CamelCase }}.{{ .ColumnName | .CamelCase }}{{ if ne .ElmType "String" }}){{ end }} ]
+                                  ]
+                                {{ end -}}
                                 ]
                             ]
                         , a [ href ("/{{ .TableName }}/" ++ {{ .TableName | .CamelCase }}.id ++ "/edit") ]

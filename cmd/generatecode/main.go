@@ -57,7 +57,15 @@ func main() {
 	}
 	defer db.Close()
 
-	tableNames, err := db.TableNames(dbschema, nil, nil)
+	whitelistArray := []string(nil)
+	if whitelist != "" {
+		whitelistArray = strings.Split(whitelist, ",")
+	}
+	blacklistArray := []string(nil)
+	if blacklist != "" {
+		blacklistArray = strings.Split(blacklist, ",")
+	}
+	tableNames, err := db.TableNames(dbschema, whitelistArray, blacklistArray)
 	if err != nil {
 		log.Println(errors.Wrapf(err, "table names"))
 		return
@@ -159,6 +167,20 @@ type dbtable struct {
 	PrimaryKeys []string
 	ForeignKeys []bdb.ForeignKey
 	DbCols      []dbcol
+}
+
+func (t dbtable) NonPkColsWithout(colnames ...string) []dbcol {
+	result := []dbcol{}
+	for i := range t.DbCols {
+		if t.DbCols[i].IsPrimaryKey {
+			continue
+		}
+		if t.ContainsAny(colnames, t.DbCols[i].ColumnName) {
+			continue
+		}
+		result = append(result, t.DbCols[i])
+	}
+	return result
 }
 
 type dbcol struct {

@@ -109,8 +109,7 @@ mutationCreateComment graphqlEndpoint comment =
                   , Json.Encode.object
                         [ ( "input"
                           , Json.Encode.object
-                                [ ( "_deleteme", Json.Encode.Extra.maybe Json.Encode.string Nothing )
-                                , ( "postID", Json.Encode.int comment.postID )
+                                [ ( "postID", Json.Encode.int comment.postID )
                                 , ( "author", Json.Encode.string comment.author )
                                 , ( "body", Json.Encode.string comment.body )
                                 , ( "notes", Json.Encode.Extra.maybe Json.Encode.string comment.notes )
@@ -156,8 +155,7 @@ mutationUpdateComment graphqlEndpoint comment =
                           )
                         , ( "input"
                           , Json.Encode.object
-                                [ ( "_deleteme", Json.Encode.Extra.maybe Json.Encode.string Nothing )
-                                , ( "postID", Json.Encode.int comment.postID )
+                                [ ( "postID", Json.Encode.int comment.postID )
                                 , ( "author", Json.Encode.string comment.author )
                                 , ( "body", Json.Encode.string comment.body )
                                 , ( "notes", Json.Encode.Extra.maybe Json.Encode.string comment.notes )
@@ -312,8 +310,7 @@ view crudroute model =
                 [ a [ href "/comment" ] [ text "< Comment" ]
                 , h1 [ class "card-title" ] [ text "New Comment" ]
                 , form [ onSubmit OnCrudNewSubmit ]
-                    [ text ""
-                    , formField <|
+                    [ formField <|
                         { label = "PostID"
                         , name = "postID"
                         , placeholder = ""
@@ -365,8 +362,7 @@ view crudroute model =
                         [ a [ href "/comment" ] [ text "< Comment" ]
                         , h1 [ class "card-title" ] [ text ("Edit " ++ toString commentID) ]
                         , form [ onSubmit OnCrudEditSubmit ]
-                            [ text ""
-                            , formField <|
+                            [ formField <|
                                 { label = "PostID"
                                 , name = "postID"
                                 , placeholder = ""
@@ -421,48 +417,28 @@ view crudroute model =
                         , table []
                             [ tbody []
                                 [ tr []
-                                    [ tr []
-                                        [ th []
-                                            [ text "ID" ]
-                                        , td []
-                                            [ text comment.id ]
-                                        ]
-                                    , tr []
-                                        [ th []
-                                            [ text "PostID" ]
-                                        , td []
-                                            [ text (toString comment.postID) ]
-                                        ]
-                                    , tr []
-                                        [ th []
-                                            [ text "Author" ]
-                                        , td []
-                                            [ text comment.author ]
-                                        ]
-                                    , tr []
-                                        [ th []
-                                            [ text "Body" ]
-                                        , td []
-                                            [ text comment.body ]
-                                        ]
-                                    , tr []
-                                        [ th []
-                                            [ text "Notes" ]
-                                        , td []
-                                            [ text (toString comment.notes) ]
-                                        ]
-                                    , tr []
-                                        [ th []
-                                            [ text "CreatedAt" ]
-                                        , td []
-                                            [ text (toString comment.createdAt) ]
-                                        ]
-                                    , tr []
-                                        [ th []
-                                            [ text "UpdatedAt" ]
-                                        , td []
-                                            [ text (toString comment.updatedAt) ]
-                                        ]
+                                    [ th []
+                                        [ text "PostID" ]
+                                    , td []
+                                        [ text (toString comment.postID) ]
+                                    ]
+                                , tr []
+                                    [ th []
+                                        [ text "Author" ]
+                                    , td []
+                                        [ text comment.author ]
+                                    ]
+                                , tr []
+                                    [ th []
+                                        [ text "Body" ]
+                                    , td []
+                                        [ text comment.body ]
+                                    ]
+                                , tr []
+                                    [ th []
+                                        [ text "Notes" ]
+                                    , td []
+                                        [ text (toString comment.notes) ]
                                     ]
                                 ]
                             ]
