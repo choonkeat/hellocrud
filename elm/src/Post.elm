@@ -109,8 +109,7 @@ mutationCreatePost graphqlEndpoint post =
                   , Json.Encode.object
                         [ ( "input"
                           , Json.Encode.object
-                                [ ( "_deleteme", Json.Encode.Extra.maybe Json.Encode.string Nothing )
-                                , ( "title", Json.Encode.string post.title )
+                                [ ( "title", Json.Encode.string post.title )
                                 , ( "author", Json.Encode.string post.author )
                                 , ( "body", Json.Encode.string post.body )
                                 , ( "notes", Json.Encode.Extra.maybe Json.Encode.string post.notes )
@@ -156,8 +155,7 @@ mutationUpdatePost graphqlEndpoint post =
                           )
                         , ( "input"
                           , Json.Encode.object
-                                [ ( "_deleteme", Json.Encode.Extra.maybe Json.Encode.string Nothing )
-                                , ( "title", Json.Encode.string post.title )
+                                [ ( "title", Json.Encode.string post.title )
                                 , ( "author", Json.Encode.string post.author )
                                 , ( "body", Json.Encode.string post.body )
                                 , ( "notes", Json.Encode.Extra.maybe Json.Encode.string post.notes )
@@ -309,8 +307,7 @@ view crudroute model =
                 [ a [ href "/post" ] [ text "< Post" ]
                 , h1 [ class "card-title" ] [ text "New Post" ]
                 , form [ onSubmit OnCrudNewSubmit ]
-                    [ text ""
-                    , formField <|
+                    [ formField <|
                         { label = "Title"
                         , name = "title"
                         , placeholder = ""
@@ -362,8 +359,7 @@ view crudroute model =
                         [ a [ href "/post" ] [ text "< Post" ]
                         , h1 [ class "card-title" ] [ text ("Edit " ++ toString postID) ]
                         , form [ onSubmit OnCrudEditSubmit ]
-                            [ text ""
-                            , formField <|
+                            [ formField <|
                                 { label = "Title"
                                 , name = "title"
                                 , placeholder = ""
@@ -418,48 +414,28 @@ view crudroute model =
                         , table []
                             [ tbody []
                                 [ tr []
-                                    [ tr []
-                                        [ th []
-                                            [ text "ID" ]
-                                        , td []
-                                            [ text post.id ]
-                                        ]
-                                    , tr []
-                                        [ th []
-                                            [ text "Title" ]
-                                        , td []
-                                            [ text post.title ]
-                                        ]
-                                    , tr []
-                                        [ th []
-                                            [ text "Author" ]
-                                        , td []
-                                            [ text post.author ]
-                                        ]
-                                    , tr []
-                                        [ th []
-                                            [ text "Body" ]
-                                        , td []
-                                            [ text post.body ]
-                                        ]
-                                    , tr []
-                                        [ th []
-                                            [ text "Notes" ]
-                                        , td []
-                                            [ text (toString post.notes) ]
-                                        ]
-                                    , tr []
-                                        [ th []
-                                            [ text "CreatedAt" ]
-                                        , td []
-                                            [ text (toString post.createdAt) ]
-                                        ]
-                                    , tr []
-                                        [ th []
-                                            [ text "UpdatedAt" ]
-                                        , td []
-                                            [ text (toString post.updatedAt) ]
-                                        ]
+                                    [ th []
+                                        [ text "Title" ]
+                                    , td []
+                                        [ text post.title ]
+                                    ]
+                                , tr []
+                                    [ th []
+                                        [ text "Author" ]
+                                    , td []
+                                        [ text post.author ]
+                                    ]
+                                , tr []
+                                    [ th []
+                                        [ text "Body" ]
+                                    , td []
+                                        [ text post.body ]
+                                    ]
+                                , tr []
+                                    [ th []
+                                        [ text "Notes" ]
+                                    , td []
+                                        [ text (toString post.notes) ]
                                     ]
                                 ]
                             ]
